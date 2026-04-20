@@ -3,99 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Tracker v3</title>
+    <title>Computer Kraha - Final Tracker</title>
     <style>
-        :root {
-            --primary: #007bff;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --dark: #343a40;
-            --light: #f8f9fa;
-        }
-
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #eef2f7; color: #333; }
+        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #eef2f7; color: #333; }
         .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
         
-        h2 { text-align: center; color: var(--dark); margin-bottom: 25px; border-bottom: 2px solid var(--primary); display: inline-block; width: 100%; padding-bottom: 10px; }
-
         .input-group { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-            gap: 12px; 
-            margin-bottom: 20px; 
-            padding: 20px;
-            background: var(--light);
-            border-radius: 8px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 12px; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;
         }
-
-        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: #555; }
+        label { font-size: 0.8rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         
-        .btn-main { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; height: 42px; margin-top: 22px; transition: 0.3s; }
-        .btn-main:hover { opacity: 0.8; }
-
-        .filter-section { margin: 20px 0; display: flex; align-items: center; gap: 10px; }
-        .filter-input { max-width: 300px; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 0.95rem; }
+        .btn-main { background: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 22px; transition: 0.3s; }
+        .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .filter-section { margin: 20px 0; display: flex; align-items: center; gap: 10px; background: #fff; padding: 10px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
         th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
-        th { background-color: var(--primary); color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-
-        .actions { display: flex; gap: 5px; }
-        .btn-edit { background: var(--warning); border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        .btn-del { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-
-        .summary-bar { 
-            margin-top: 20px; 
-            padding: 15px; 
-            background: var(--dark); 
-            color: white; 
-            border-radius: 8px; 
-            display: flex; 
-            justify-content: flex-end; 
-            font-size: 1.2rem; 
-        }
+        th { background: var(--primary); color: white; font-weight: 600; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.25rem; }
         .grand-total { font-weight: bold; color: #50fa7b; margin-left: 10px; }
+        .actions button { padding: 6px 10px; cursor: pointer; border: none; border-radius: 4px; margin-right: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Tracker with Village Data</h2>
+    <h2>Data Tracker (Connected to Google Sheets)</h2>
 
     <div class="input-group">
-        <div>
-            <label>Name</label>
-            <input type="text" id="name" placeholder="Person Name">
-        </div>
-        <div>
-            <label>Village</label>
-            <input type="text" id="village" placeholder="Village Name">
-        </div>
-        <div>
-            <label>Date</label>
-            <input type="date" id="date">
-        </div>
-        <div>
-            <label>Start Time</label>
-            <input type="time" id="timeStart">
-        </div>
-        <div>
-            <label>Close Time</label>
-            <input type="time" id="timeClose">
-        </div>
-        <div>
-            <label>Amount</label>
-            <input type="number" id="amount" placeholder="0.00">
-        </div>
+        <div><label>Name</label><input type="text" id="name" placeholder="Name"></div>
+        <div><label>Village</label><input type="text" id="village" placeholder="Village"></div>
+        <div><label>Date</label><input type="date" id="date"></div>
+        <div><label>Start Time</label><input type="time" id="timeStart"></div>
+        <div><label>Close Time</label><input type="time" id="timeClose"></div>
+        <div><label>Amount</label><input type="number" id="amount" placeholder="0.00"></div>
         <button onclick="addOrUpdateRow()" id="addBtn" class="btn-main">Add Entry</button>
     </div>
 
     <div class="filter-section">
         <strong>Search:</strong>
-        <input type="text" id="filterInput" class="filter-input" onkeyup="filterTable()" placeholder="Search Name or Village...">
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name or Village..." style="width: 300px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
     </div>
 
     <table id="dataTable">
@@ -104,8 +57,8 @@
                 <th>Name</th>
                 <th>Village</th>
                 <th>Date</th>
-                <th>Time Start</th>
-                <th>Time Close</th>
+                <th>Start</th>
+                <th>Close</th>
                 <th>Total Time</th>
                 <th>Amount</th>
                 <th>Actions</th>
@@ -115,66 +68,73 @@
     </table>
 
     <div class="summary-bar">
-        Total Amount: <span class="grand-total">$<span id="grandTotal">0.00</span></span>
+        Grand Total: <span class="grand-total">₹<span id="grandTotal">0.00</span></span>
     </div>
 </div>
 
 <script>
     let editRow = null;
+    // Aapka Google Script URL yahan set kar diya gaya hai
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbw8dHh-ODrqRcPgZQ4r8prap7XuRmQqzYA38rsrVzEynf05hc-dWnc5-gs-tqmPqzLJ/exec";
 
-    function calculateDuration(start, end) {
-        if (!start || !end) return "0h 0m";
-        let s = start.split(':'), e = end.split(':');
-        let startDate = new Date(0, 0, 0, s[0], s[1], 0);
-        let endDate = new Date(0, 0, 0, e[0], e[1], 0);
-        let diff = endDate.getTime() - startDate.getTime();
-        if (diff < 0) diff += 86400000; 
-        let hours = Math.floor(diff / 1000 / 60 / 60);
-        let mins = Math.floor((diff / 1000 / 60) % 60);
-        return `${hours}h ${mins}m`;
+    function calculateDuration(s, e) {
+        if (!s || !e) return "0h 0m";
+        let start = new Date("2000/01/01 " + s);
+        let end = new Date("2000/01/01 " + e);
+        let diff = end - start;
+        if (diff < 0) diff += 86400000; // Over midnight fix
+        let h = Math.floor(diff / 3600000);
+        let m = Math.floor((diff % 3600000) / 60000);
+        return h + "h " + m + "m";
     }
 
-    function addOrUpdateRow() {
+    async function addOrUpdateRow() {
         const name = document.getElementById('name').value;
         const village = document.getElementById('village').value;
         const date = document.getElementById('date').value;
-        const start = document.getElementById('timeStart').value;
-        const close = document.getElementById('timeClose').value;
-        const amountVal = document.getElementById('amount').value;
-        const amount = parseFloat(amountVal) || 0;
-        const duration = calculateDuration(start, close);
+        const timeStart = document.getElementById('timeStart').value;
+        const timeClose = document.getElementById('timeClose').value;
+        const amountStr = document.getElementById('amount').value;
+        const amount = parseFloat(amountStr) || 0;
+        const duration = calculateDuration(timeStart, timeClose);
 
-        if (!name || amountVal === "") return alert("Enter Name and Amount!");
+        if (!name || amountStr === "") return alert("Please fill Name and Amount!");
+
+        const dataObj = { name, village, date, timeStart, timeClose, duration, amount: amount.toFixed(2) };
+
+        // Google Sheets ko data bhejna
+        fetch(GOOGLE_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            body: JSON.stringify(dataObj)
+        }).catch(err => console.log("Google Sheet Error: ", err));
 
         if (editRow) {
+            // Update UI
             editRow.cells[0].innerText = name;
             editRow.cells[1].innerText = village;
             editRow.cells[2].innerText = date;
-            editRow.cells[3].innerText = start;
-            editRow.cells[4].innerText = close;
+            editRow.cells[3].innerText = timeStart;
+            editRow.cells[4].innerText = timeClose;
             editRow.cells[5].innerText = duration;
             editRow.cells[6].innerText = amount.toFixed(2);
             editRow = null;
             document.getElementById('addBtn').innerText = "Add Entry";
-            document.getElementById('addBtn').style.backgroundColor = "#28a745";
+            document.getElementById('addBtn').style.background = "var(--success)";
         } else {
-            const row = document.getElementById('dataTable').querySelector('tbody').insertRow();
+            // Add new row to UI
+            const tbody = document.getElementById('dataTable').querySelector('tbody');
+            const row = tbody.insertRow();
             row.innerHTML = `
-                <td>${name}</td>
-                <td>${village}</td>
-                <td>${date}</td>
-                <td>${start}</td>
-                <td>${close}</td>
-                <td>${duration}</td>
-                <td>${amount.toFixed(2)}</td>
+                <td>${name}</td><td>${village}</td><td>${date}</td><td>${timeStart}</td><td>${timeClose}</td><td>${duration}</td><td>${amount.toFixed(2)}</td>
                 <td class="actions">
-                    <button class="btn-edit" onclick="startEdit(this)">Edit</button>
-                    <button class="btn-del" onclick="deleteRow(this)">Del</button>
-                </td>
-            `;
+                    <button style="background:var(--warning)" onclick="startEdit(this)">Edit</button>
+                    <button style="background:var(--danger);color:white" onclick="deleteRow(this)">Del</button>
+                </td>`;
         }
-        updateGrandTotal();
-        clearInputs();
+        updateTotal();
+        clearFields();
     }
 
     function startEdit(btn) {
@@ -186,34 +146,34 @@
         document.getElementById('timeClose').value = editRow.cells[4].innerText;
         document.getElementById('amount').value = editRow.cells[6].innerText;
         document.getElementById('addBtn').innerText = "Update Entry";
-        document.getElementById('addBtn').style.backgroundColor = "#007bff";
+        document.getElementById('addBtn').style.background = "var(--primary)";
+        window.scrollTo(0,0);
     }
 
     function deleteRow(btn) {
-        if(confirm("Delete this entry?")) {
+        if(confirm("Are you sure you want to delete this entry from view?")) {
             btn.parentElement.parentElement.remove();
-            updateGrandTotal();
+            updateTotal();
         }
     }
 
-    function updateGrandTotal() {
-        let rows = document.getElementById('dataTable').querySelectorAll('tbody tr');
+    function updateTotal() {
         let total = 0;
-        rows.forEach(row => total += parseFloat(row.cells[6].innerText) || 0);
+        document.querySelectorAll('tbody tr').forEach(r => {
+            total += parseFloat(r.cells[6].innerText) || 0;
+        });
         document.getElementById('grandTotal').innerText = total.toFixed(2);
     }
 
-    function clearInputs() {
+    function clearFields() {
         ['name', 'village', 'date', 'timeStart', 'timeClose', 'amount'].forEach(id => document.getElementById(id).value = '');
     }
 
     function filterTable() {
-        const query = document.getElementById('filterInput').value.toUpperCase();
-        const rows = document.getElementById('dataTable').querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            const name = row.cells[0].innerText.toUpperCase();
-            const village = row.cells[1].innerText.toUpperCase();
-            row.style.display = (name.includes(query) || village.includes(query)) ? "" : "none";
+        let q = document.getElementById('filterInput').value.toUpperCase();
+        document.querySelectorAll('tbody tr').forEach(r => {
+            let match = r.cells[0].innerText.toUpperCase().includes(q) || r.cells[1].innerText.toUpperCase().includes(q);
+            r.style.display = match ? "" : "none";
         });
     }
 </script>
