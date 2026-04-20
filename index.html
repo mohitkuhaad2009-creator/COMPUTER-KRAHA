@@ -2,6 +2,117 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Business Tracker Pro</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f0f2f5; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        input, button { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background-color: #28a745; color: white; cursor: pointer; font-weight: bold; }
+        .btn-edit { background-color: #ffc107; color: black; padding: 5px 10px; }
+        .filter-section { margin-bottom: 15px; background: #e9ecef; padding: 15px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .summary { font-size: 1.2em; font-weight: bold; margin-top: 15px; display: flex; justify-content: flex-end; gap: 20px; }
+        .total-box { background: #333; color: white; padding: 10px 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tracker with Edit & Total Time</h2>
+
+    <div class="input-group">
+        <input type="text" id="name" placeholder="Name">
+        <input type="date" id="date">
+        <input type="time" id="timeStart">
+        <input type="time" id="timeClose">
+        <input type="number" id="amount" placeholder="Amount">
+        <button onclick="addOrUpdateRow()" id="addBtn">Add Entry</button>
+    </div>
+
+    <div class="filter-section">
+        <div>
+            <strong>Filter:</strong> 
+            <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search names...">
+        </div>
+    </div>
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time Start</th>
+                <th>Time Close</th>
+                <th>Total Time</th>
+                <th>Amount</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="summary">
+        <div class="total-box">Total Amount: $<span id="grandTotal">0.00</span></div>
+    </div>
+</div>
+
+<script>
+    let editRow = null;
+
+    function calculateDuration(start, end) {
+        if (!start || !end) return "00:00";
+        let s = start.split(':');
+        let e = end.split(':');
+        let startDate = new Date(0, 0, 0, s[0], s[1], 0);
+        let endDate = new Date(0, 0, 0, e[0], e[1], 0);
+        let diff = endDate.getTime() - startDate.getTime();
+        
+        if (diff < 0) diff += 86400000; // Handle overnight times
+
+        let hours = Math.floor(diff / 1000 / 60 / 60);
+        let mins = Math.floor((diff / 1000 / 60) % 60);
+        return `${hours}h ${mins}m`;
+    }
+
+    function addOrUpdateRow() {
+        const name = document.getElementById('name').value;
+        const date = document.getElementById('date').value;
+        const start = document.getElementById('timeStart').value;
+        const close = document.getElementById('timeClose').value;
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const duration = calculateDuration(start, close);
+
+        if (!name || isNaN(amount)) return alert("Fill Name and Amount!");
+
+        if (editRow) {
+            // Update existing row
+            editRow.cells[0].innerText = name;
+            editRow.cells[1].innerText = date;
+            editRow.cells[2].innerText = start;
+            editRow.cells[3].innerText = close;
+            editRow.cells[4].innerText = duration;
+            editRow.cells[5].innerText = amount.toFixed(2);
+            editRow = null;
+            document.getElementById('addBtn').innerText = "Add Entry";
+            document.getElementById('addBtn').style.backgroundColor = "#28a745";
+        } else {
+            // Create new row
+            const table = document.getElementById('dataTable').querySelector('tbody');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td>${name}</td>
+                <td>${date}</td>
+                <td>${start}</td>
+                <td>${close}</td>
+                <td>${duration}</td>
+                <td>${amount.toFixed(2)}</td>
+                <td><button class="btn-edit" onclick="start<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <title>Business Tracker</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; }
