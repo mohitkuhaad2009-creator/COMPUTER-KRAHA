@@ -1,1 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Business Tracker</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        input, button { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background-color: #28a745; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        .filter-section { margin-bottom: 15px; background: #e9ecef; padding: 10px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .total-display { font-size: 1.2em; font-weight: bold; color: #d9534f; margin-top: 15px; text-align: right; }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <h2>Daily Entry Tracker</h2>
+
+    <div class="input-group">
+        <input type="text" id="name" placeholder="Name">
+        <input type="date" id="date">
+        <input type="time" id="timeStart" title="Time Start">
+        <input type="time" id="timeClose" title="Time Close">
+        <input type="number" id="amount" placeholder="Amount ($)">
+        <button onclick="addRow()">Add Entry</button>
+    </div>
+
+    <div class="filter-section">
+        <strong>Filter by Name:</strong> 
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search names...">
+    </div>
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time Start</th>
+                <th>Time Close</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <div class="total-display">
+        Total Amount: $<span id="grandTotal">0</span>
+    </div>
+</div>
+
+<script>
+    let total = 0;
+
+    function addRow() {
+        const name = document.getElementById('name').value;
+        const date = document.getElementById('date').value;
+        const start = document.getElementById('timeStart').value;
+        const close = document.getElementById('timeClose').value;
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+
+        if(!name || !amount) {
+            alert("Please enter a name and amount");
+            return;
+        }
+
+        const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+
+        newRow.innerHTML = `<td>${name}</td><td>${date}</td><td>${start}</td><td>${close}</td><td>${amount}</td>`;
+
+        // Update Total
+        total += amount;
+        document.getElementById('grandTotal').innerText = total.toFixed(2);
+
+        // Clear Inputs
+        document.getElementById('name').value = '';
+        document.getElementById('amount').value = '';
+    }
+
+    function filterTable() {
+        const input = document.getElementById('filterInput').value.toUpperCase();
+        const tr = document.getElementById('dataTable').getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            let td = tr[i].getElementsByTagName('td')[0];
+            if (td) {
+                let textValue = td.textContent || td.innerText;
+                tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
