@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Final Tracker</title>
+    <title>Computer Kraha - Updated Tracker</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; }
         body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #eef2f7; color: #333; }
@@ -34,7 +34,7 @@
 <body>
 
 <div class="container">
-    <h2>Data Tracker (Connected to Google Sheets)</h2>
+    <h2>Data Tracker (New Script Connection)</h2>
 
     <div class="input-group">
         <div><label>Name</label><input type="text" id="name" placeholder="Name"></div>
@@ -74,15 +74,15 @@
 
 <script>
     let editRow = null;
-    // Aapka Google Script URL yahan set kar diya gaya hai
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbw8dHh-ODrqRcPgZQ4r8prap7XuRmQqzYA38rsrVzEynf05hc-dWnc5-gs-tqmPqzLJ/exec";
+    // Aapka naya Google Script URL
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbw82-h48g8brLsBweQdsB4ejY6jn90Hdh4AoZTr3LtFQVn_G1QDevxPmabYB0wvqZCL/exec";
 
     function calculateDuration(s, e) {
         if (!s || !e) return "0h 0m";
         let start = new Date("2000/01/01 " + s);
         let end = new Date("2000/01/01 " + e);
         let diff = end - start;
-        if (diff < 0) diff += 86400000; // Over midnight fix
+        if (diff < 0) diff += 86400000;
         let h = Math.floor(diff / 3600000);
         let m = Math.floor((diff % 3600000) / 60000);
         return h + "h " + m + "m";
@@ -102,16 +102,17 @@
 
         const dataObj = { name, village, date, timeStart, timeClose, duration, amount: amount.toFixed(2) };
 
-        // Google Sheets ko data bhejna
+        // Data Google Sheets ko bhej raha hai
         fetch(GOOGLE_URL, {
             method: 'POST',
             mode: 'no-cors',
             cache: 'no-cache',
             body: JSON.stringify(dataObj)
-        }).catch(err => console.log("Google Sheet Error: ", err));
+        }).then(() => {
+            console.log("Data Sent Successfully");
+        }).catch(err => alert("Error connecting to Google Sheets"));
 
         if (editRow) {
-            // Update UI
             editRow.cells[0].innerText = name;
             editRow.cells[1].innerText = village;
             editRow.cells[2].innerText = date;
@@ -123,7 +124,6 @@
             document.getElementById('addBtn').innerText = "Add Entry";
             document.getElementById('addBtn').style.background = "var(--success)";
         } else {
-            // Add new row to UI
             const tbody = document.getElementById('dataTable').querySelector('tbody');
             const row = tbody.insertRow();
             row.innerHTML = `
@@ -151,7 +151,7 @@
     }
 
     function deleteRow(btn) {
-        if(confirm("Are you sure you want to delete this entry from view?")) {
+        if(confirm("Delete from screen? (Sheet data won't be deleted)")) {
             btn.parentElement.parentElement.remove();
             updateTotal();
         }
