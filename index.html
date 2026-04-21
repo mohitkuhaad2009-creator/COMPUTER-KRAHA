@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Final Tracker v4</title>
+    <title>Computer Kraha - Tracker with History</title>
     <style>
         :root { 
-            --primary: #007bff; 
-            --success: #28a745; 
-            --warning: #ffc107; 
-            --danger: #dc3545; 
-            --dark: #343a40; 
-            --light: #f8f9fa;
+            --primary: #007bff; --success: #28a745; --warning: #ffc107; 
+            --danger: #dc3545; --dark: #343a40; --light: #f8f9fa;
         }
 
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #eef2f7; color: #333; }
         .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        /* Print logic */
         @media print {
-            .input-group, .filter-section, .actions, .btn-print, h2 { display: none !important; }
+            .input-group, .filter-section, .actions, .btn-print, h2, .history-header { display: none !important; }
             body { background: white; margin: 0; }
             .container { box-shadow: none; max-width: 100%; padding: 0; border: none; }
             table { width: 100%; border: 1px solid #000; font-size: 11px; }
@@ -27,8 +22,9 @@
             .summary-bar { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; margin-top: 10px; }
         }
 
-        h2 { text-align: center; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
-        
+        h2, .history-header { text-align: center; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+        .history-header { margin-top: 30px; border-bottom: 2px solid var(--dark); }
+
         .input-group { 
             display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
             gap: 12px; margin-bottom: 20px; padding: 20px; background: var(--light); border-radius: 8px; border: 1px solid #ddd;
@@ -37,9 +33,7 @@
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         
         .btn-main { background: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 22px; transition: 0.3s; }
-        .btn-main:hover { opacity: 0.9; }
-
-        .btn-print { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; float: right; margin-bottom: 10px; }
+        .btn-print { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; float: right; }
 
         .filter-section { margin: 20px 0; display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff; border-radius: 5px; border: 1px solid #eee; }
 
@@ -54,29 +48,32 @@
         .actions { display: flex; gap: 5px; }
         .btn-edit { background: var(--warning); border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-del { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-clear { background: #6c757d; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Data Tracker (Village + Mobile + Print)</h2>
+    <h2>Data Entry</h2>
 
     <button onclick="window.print()" class="btn-print">⎙ Print Report</button>
 
     <div class="input-group">
-        <div><label>Name</label><input type="text" id="name" placeholder="Name"></div>
-        <div><label>Mobile</label><input type="text" id="mobile" placeholder="Mobile"></div>
-        <div><label>Village</label><input type="text" id="village" placeholder="Village"></div>
+        <div><label>Name</label><input type="text" id="name"></div>
+        <div><label>Mobile</label><input type="text" id="mobile"></div>
+        <div><label>Village</label><input type="text" id="village"></div>
         <div><label>Date</label><input type="date" id="date"></div>
         <div><label>Start Time</label><input type="time" id="timeStart"></div>
         <div><label>Close Time</label><input type="time" id="timeClose"></div>
-        <div><label>Amount (₹)</label><input type="number" id="amount" placeholder="0.00"></div>
-        <button onclick="addOrUpdateRow()" id="addBtn" class="btn-main">Add Entry</button>
+        <div><label>Amount (₹)</label><input type="number" id="amount"></div>
+        <button onclick="addOrUpdateRow()" id="addBtn" class="btn-main">Save Entry</button>
     </div>
 
+    <h2 class="history-header">Transaction History</h2>
+
     <div class="filter-section">
-        <strong>Search Filter:</strong>
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name, Mobile, or Village..." style="width: 350px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <strong>Search History:</strong>
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name, Village, Mobile..." style="width: 350px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
     </div>
 
     <table id="dataTable">
@@ -97,14 +94,18 @@
     </table>
 
     <div class="summary-bar">
-        Grand Total: <span class="grand-total">₹<span id="grandTotal">0.00</span></span>
+        Total of History: <span class="grand-total">₹<span id="grandTotal">0.00</span></span>
     </div>
+    <button onclick="clearHistory()" class="btn-clear no-print">Clear All History</button>
 </div>
 
 <script>
-    let editRow = null;
-    // Updated Script URL
+    let editIndex = null;
+    let transactionHistory = JSON.parse(localStorage.getItem('trackerHistory')) || [];
     const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbzIrh-DcM2CHOpfakZPwXLQYvvdvzo6-SY7r1kd7tQ0i8kS11oI4MlfYGVtqUvMebxw/exec";
+
+    // Load history on startup
+    window.onload = renderTable;
 
     function calculateDuration(s, e) {
         if (!s || !e) return "0h 0m";
@@ -112,13 +113,11 @@
         let end = new Date("2000/01/01 " + e);
         let diff = end - start;
         if (diff < 0) diff += 86400000;
-        let hours = Math.floor(diff / 3600000);
-        let mins = Math.floor((diff % 3600000) / 60000);
-        return `${hours}h ${mins}m`;
+        return Math.floor(diff/3600000) + "h " + Math.floor((diff%3600000)/60000) + "m";
     }
 
     async function addOrUpdateRow() {
-        const data = {
+        const entry = {
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             village: document.getElementById('village').value,
@@ -129,58 +128,81 @@
             duration: calculateDuration(document.getElementById('timeStart').value, document.getElementById('timeClose').value)
         };
 
-        if (!data.name || isNaN(data.amount)) return alert("Please fill Name and Amount!");
+        if (!entry.name || isNaN(entry.amount)) return alert("Please enter Name and Amount!");
 
-        // Google Sheet Connection
-        fetch(GOOGLE_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(data) 
-        }).then(() => {
-            console.log("Data packet sent to script.");
-        }).catch(err => alert("Error: " + err));
+        // Send to Google Sheets
+        fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
 
-        if (editRow) {
-            editRow.cells[0].innerText = data.name;
-            editRow.cells[1].innerText = data.mobile;
-            editRow.cells[2].innerText = data.village;
-            editRow.cells[3].innerText = data.date;
-            editRow.cells[4].innerText = data.timeStart;
-            editRow.cells[5].innerText = data.timeClose;
-            editRow.cells[6].innerText = data.duration;
-            editRow.cells[7].innerText = data.amount.toFixed(2);
-            editRow = null;
-            document.getElementById('addBtn').innerText = "Add Entry";
+        if (editIndex !== null) {
+            transactionHistory[editIndex] = entry;
+            editIndex = null;
+            document.getElementById('addBtn').innerText = "Save Entry";
             document.getElementById('addBtn').style.background = "var(--success)";
         } else {
-            const row = document.getElementById('dataTable').querySelector('tbody').insertRow();
-            row.innerHTML = `<td>${data.name}</td><td>${data.mobile}</td><td>${data.village}</td><td>${data.date}</td><td>${data.timeStart}</td><td>${data.timeClose}</td><td>${data.duration}</td><td>${data.amount.toFixed(2)}</td>
-            <td class="actions"><button class="btn-edit" onclick="startEdit(this)">Edit</button><button class="btn-del" onclick="deleteRow(this)">Del</button></td>`;
+            transactionHistory.push(entry);
         }
-        updateTotal();
-        ['name','mobile','village','date','timeStart','timeClose','amount'].forEach(id => document.getElementById(id).value = '');
+
+        saveAndRender();
+        clearInputs();
     }
 
-    function startEdit(btn) {
-        editRow = btn.parentElement.parentElement;
-        document.getElementById('name').value = editRow.cells[0].innerText;
-        document.getElementById('mobile').value = editRow.cells[1].innerText;
-        document.getElementById('village').value = editRow.cells[2].innerText;
-        document.getElementById('date').value = editRow.cells[3].innerText;
-        document.getElementById('timeStart').value = editRow.cells[4].innerText;
-        document.getElementById('timeClose').value = editRow.cells[5].innerText;
-        document.getElementById('amount').value = editRow.cells[7].innerText;
-        document.getElementById('addBtn').innerText = "Update Row";
+    function renderTable() {
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        let total = 0;
+
+        transactionHistory.forEach((item, index) => {
+            total += item.amount;
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${item.name}</td><td>${item.mobile}</td><td>${item.village}</td>
+                <td>${item.date}</td><td>${item.timeStart}</td><td>${item.timeClose}</td>
+                <td>${item.duration}</td><td>${item.amount.toFixed(2)}</td>
+                <td class="actions">
+                    <button class="btn-edit" onclick="startEdit(${index})">Edit</button>
+                    <button class="btn-del" onclick="deleteEntry(${index})">Del</button>
+                </td>`;
+        });
+        document.getElementById('grandTotal').innerText = total.toFixed(2);
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('trackerHistory', JSON.stringify(transactionHistory));
+        renderTable();
+    }
+
+    function startEdit(index) {
+        editIndex = index;
+        const item = transactionHistory[index];
+        document.getElementById('name').value = item.name;
+        document.getElementById('mobile').value = item.mobile;
+        document.getElementById('village').value = item.village;
+        document.getElementById('date').value = item.date;
+        document.getElementById('timeStart').value = item.timeStart;
+        document.getElementById('timeClose').value = item.timeClose;
+        document.getElementById('amount').value = item.amount;
+        
+        document.getElementById('addBtn').innerText = "Update History Entry";
         document.getElementById('addBtn').style.background = "var(--primary)";
         window.scrollTo(0,0);
     }
 
-    function deleteRow(btn) { if(confirm("Are you sure?")) { btn.parentElement.parentElement.remove(); updateTotal(); } }
+    function deleteEntry(index) {
+        if(confirm("Delete this from history?")) {
+            transactionHistory.splice(index, 1);
+            saveAndRender();
+        }
+    }
 
-    function updateTotal() {
-        let total = 0;
-        document.querySelectorAll('tbody tr').forEach(r => total += parseFloat(r.cells[7].innerText) || 0);
-        document.getElementById('grandTotal').innerText = total.toFixed(2);
+    function clearHistory() {
+        if(confirm("Are you sure? This will delete ALL history from this screen.")) {
+            transactionHistory = [];
+            saveAndRender();
+        }
+    }
+
+    function clearInputs() {
+        ['name','mobile','village','date','timeStart','timeClose','amount'].forEach(id => document.getElementById(id).value = '');
     }
 
     function filterTable() {
