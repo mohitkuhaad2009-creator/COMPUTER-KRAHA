@@ -3,83 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Cloud Sync Tracker</title>
+    <title>Computer Kraha - Advanced Tracker</title>
     <style>
-        :root { 
-            --primary: #007bff; --success: #28a745; --warning: #ffc107; 
-            --danger: #dc3545; --dark: #343a40; --light: #f8f9fa;
-        }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #eef2f7; color: #333; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 15px; background: #eef2f7; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        @media print {
-            .input-group, .filter-section, .actions, .btn-print, h2, .history-header, .loading { display: none !important; }
-            body { background: white; margin: 0; }
-            .container { box-shadow: none; max-width: 100%; padding: 0; border: none; }
-            table { width: 100%; border: 1px solid #000; font-size: 11px; }
-            th, td { border: 1px solid #000 !important; padding: 6px; }
-        }
+        /* Form Styling */
+        .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 20px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
+        label { font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-save { background: var(--success); width: 100%; margin-top: 22px; }
+        .btn-edit { background: var(--warning); color: #000; padding: 5px 10px; margin-right: 5px; }
+        .btn-del { background: var(--danger); padding: 5px 10px; }
 
-        h2, .history-header { text-align: center; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
-        .input-group { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-            gap: 12px; margin-bottom: 20px; padding: 20px; background: var(--light); border-radius: 8px; border: 1px solid #ddd;
-        }
-        label { font-size: 0.8rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn-main { background: var(--success); color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 22px; }
-        .btn-print { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; float: right; }
-        .filter-section { margin: 20px 0; display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff; border-radius: 5px; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
-        th { background: var(--primary); color: white; }
-        tr:nth-child(even) { background-color: #fcfcfc; }
-        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.3rem; }
-        .grand-total { font-weight: bold; color: #50fa7b; margin-left: 10px; }
-        .loading { text-align: center; color: var(--primary); font-weight: bold; padding: 10px; }
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: var(--primary); color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background: #f9f9f9; }
+
+        .history-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dark); padding: 10px 0; margin-top: 20px; }
+        .stats-badge { background: var(--dark); color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
+        
+        .tick-col { width: 40px; text-align: center; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        
+        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.2rem; }
+        .total-val { color: #50fa7b; font-weight: bold; }
+        
+        @media print { .input-group, .actions, .btn-print, .no-print, .btn-edit, .btn-del { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Data Entry</h2>
-    <button onclick="window.print()" class="btn-print">⎙ Print History</button>
-
+    <h2>Entry Panel</h2>
+    
     <div class="input-group">
-        <div><label>Name</label><input type="text" id="name"></div>
-        <div><label>Mobile</label><input type="text" id="mobile"></div>
-        <div><label>Village</label><input type="text" id="village"></div>
+        <input type="hidden" id="rowId">
+        <div><label>Name</label><input type="text" id="name" placeholder="Name"></div>
+        <div><label>Mobile</label><input type="text" id="mobile" placeholder="Mobile"></div>
+        <div><label>Village</label><input type="text" id="village" placeholder="Village"></div>
         <div><label>Date</label><input type="date" id="date"></div>
         <div><label>Start</label><input type="time" id="timeStart"></div>
         <div><label>Close</label><input type="time" id="timeClose"></div>
-        <div><label>Amount (₹)</label><input type="number" id="amount"></div>
-        <button onclick="saveToGoogle()" id="saveBtn" class="btn-main">Save & Sync</button>
+        <div><label>Amount (₹)</label><input type="number" id="amount" placeholder="0.00"></div>
+        <button onclick="saveData()" id="mainBtn" class="btn btn-save">Save Entry</button>
     </div>
 
-    <h2 class="history-header">Live Transaction History (Cloud)</h2>
-    <div id="loadingStatus" class="loading">Fetching data from Google Sheets...</div>
-
-    <div class="filter-section">
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Cloud History..." style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+    <div class="history-header">
+        <h3>Cloud History</h3>
+        <div class="stats-badge">Total Entries: <span id="entryCount">0</span></div>
     </div>
+
+    <div id="statusMsg" style="text-align: center; color: var(--primary); font-weight: bold; padding: 10px;">Loading data...</div>
 
     <table id="dataTable">
         <thead>
             <tr>
-                <th>Name</th><th>Mobile</th><th>Village</th><th>Date</th><th>Start</th><th>Close</th><th>Duration</th><th>Amount (₹)</th>
+                <th class="tick-col">✓</th>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>Village</th>
+                <th>Date</th>
+                <th>Start</th>
+                <th>Close</th>
+                <th>Duration</th>
+                <th>Amount</th>
+                <th class="no-print">Actions</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
     <div class="summary-bar">
-        Grand Total (All Devices): <span class="grand-total">₹<span id="grandTotal">0.00</span></span>
+        Grand Total: <span class="total-val">₹<span id="grandTotal">0.00</span></span>
     </div>
 </div>
 
 <script>
-    // Naya URL yahan set hai
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbx_EMsj-Q0M8cd6DY2bicfiEA8UZ7jdXZBfppvrjRe7g-J5bzvJBUOdhMc87Wf8Loyp/exec";
+    // Aapka Update kiya hua URL
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyftBpoYoGk8OB-TEcQr_umHlw_qlpg0AWP8HXLT-NUICCiEKQWeSLUt9ngtOJ3TZGN/exec";
+    let allData = [];
 
     window.onload = fetchHistory;
 
@@ -93,32 +101,53 @@
     }
 
     async function fetchHistory() {
-        const loading = document.getElementById('loadingStatus');
-        const tbody = document.querySelector('#dataTable tbody');
-        loading.style.display = "block";
-        loading.innerText = "Connecting to Google Cloud...";
-
+        const status = document.getElementById('statusMsg');
+        status.style.display = "block";
         try {
-            const response = await fetch(GOOGLE_URL);
-            const data = await response.json();
-            
-            tbody.innerHTML = '';
-            let total = 0;
-            data.reverse().forEach(item => { // Latest entry pehle dikhane ke liye reverse
-                total += parseFloat(item.amount) || 0;
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${item.name}</td><td>${item.mobile}</td><td>${item.village}</td><td>${item.date}</td><td>${item.timeStart}</td><td>${item.timeClose}</td><td>${item.duration}</td><td>${parseFloat(item.amount).toFixed(2)}</td>`;
-            });
-            document.getElementById('grandTotal').innerText = total.toFixed(2);
-            loading.style.display = "none";
+            const res = await fetch(GOOGLE_URL);
+            allData = await res.json();
+            renderTable();
+            status.style.display = "none";
         } catch (err) {
-            loading.innerText = "Error loading data. Check Internet or Script URL.";
+            status.innerText = "Error loading data. Check Internet.";
         }
     }
 
-    async function saveToGoogle() {
-        const saveBtn = document.getElementById('saveBtn');
+    function renderTable() {
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        let total = 0;
+        
+        // Reverse isliye kiya taaki nayi entry upar dikhe
+        allData.reverse().forEach((item, index) => {
+            total += parseFloat(item.amount) || 0;
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="tick-col"><input type="checkbox"></td>
+                <td>${item.name}</td>
+                <td>${item.mobile}</td>
+                <td>${item.village}</td>
+                <td>${item.date.split('T')[0]}</td>
+                <td>${item.timeStart}</td>
+                <td>${item.timeClose}</td>
+                <td>${item.duration}</td>
+                <td>${parseFloat(item.amount).toFixed(2)}</td>
+                <td class="no-print">
+                    <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
+                    <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
+                </td>`;
+        });
+        document.getElementById('grandTotal').innerText = total.toFixed(2);
+        document.getElementById('entryCount').innerText = allData.length;
+    }
+
+    async function saveData() {
+        const mainBtn = document.getElementById('mainBtn');
+        const rowId = document.getElementById('rowId').value;
+        
         const entry = {
+            action: rowId ? "edit" : "add",
+            rowId: rowId,
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             village: document.getElementById('village').value,
@@ -131,24 +160,44 @@
 
         if (!entry.name || !entry.amount) return alert("Fill Name and Amount!");
 
-        saveBtn.innerText = "Saving...";
-        saveBtn.disabled = true;
+        mainBtn.innerText = "Processing Cloud...";
+        mainBtn.disabled = true;
 
         await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
         
-        // Form clear karein aur history dobara load karein
-        ['name','mobile','village','date','timeStart','timeClose','amount'].forEach(id => document.getElementById(id).value = '');
-        saveBtn.innerText = "Save & Sync";
-        saveBtn.disabled = false;
-        fetchHistory(); 
+        // Data save hone ke baad page refresh
+        location.reload();
     }
 
-    function filterTable() {
-        let q = document.getElementById('filterInput').value.toUpperCase();
-        document.querySelectorAll('tbody tr').forEach(r => {
-            r.style.display = r.innerText.toUpperCase().includes(q) ? "" : "none";
-        });
+    function editEntry(originalIndex) {
+        const item = allData[originalIndex];
+        document.getElementById('rowId').value = item.rowId;
+        document.getElementById('name').value = item.name;
+        document.getElementById('mobile').value = item.mobile;
+        document.getElementById('village').value = item.village;
+        document.getElementById('date').value = item.date.split('T')[0];
+        document.getElementById('timeStart').value = item.timeStart;
+        document.getElementById('timeClose').value = item.timeClose;
+        document.getElementById('amount').value = item.amount;
+        
+        document.getElementById('mainBtn').innerText = "Update Cloud Row";
+        document.getElementById('mainBtn').style.background = "var(--primary)";
+        window.scrollTo(0,0);
+    }
+
+    async function deleteEntry(id) {
+        if(confirm("Kya aap sach mein ise hamesha ke liye mitaana chahte hain?")) {
+            document.getElementById('statusMsg').innerText = "Deleting...";
+            document.getElementById('statusMsg').style.display = "block";
+            await fetch(GOOGLE_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({action: "delete", rowId: id}) 
+            });
+            location.reload();
+        }
     }
 </script>
+
 </body>
 </html>
