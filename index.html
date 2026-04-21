@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Advanced Tracker</title>
+    <title>Computer Kraha - Advanced Tracker with Search</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 15px; background: #eef2f7; }
@@ -18,6 +18,10 @@
         .btn-save { background: var(--success); width: 100%; margin-top: 22px; }
         .btn-edit { background: var(--warning); color: #000; padding: 5px 10px; margin-right: 5px; }
         .btn-del { background: var(--danger); padding: 5px 10px; }
+
+        /* Filter Section */
+        .search-box { margin: 20px 0; padding: 15px; background: #fff; border: 1px solid var(--primary); border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+        .search-box input { flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; }
 
         /* Table Styling */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
@@ -34,7 +38,7 @@
         .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.2rem; }
         .total-val { color: #50fa7b; font-weight: bold; }
         
-        @media print { .input-group, .actions, .btn-print, .no-print, .btn-edit, .btn-del { display: none !important; } }
+        @media print { .input-group, .search-box, .no-print, .btn-edit, .btn-del { display: none !important; } }
     </style>
 </head>
 <body>
@@ -56,7 +60,12 @@
 
     <div class="history-header">
         <h3>Cloud History</h3>
-        <div class="stats-badge">Total Entries: <span id="entryCount">0</span></div>
+        <div class="stats-badge">Shown: <span id="entryCount">0</span></div>
+    </div>
+
+    <div class="search-box">
+        <strong>🔍 Search:</strong>
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name, Mobile, or Village here...">
     </div>
 
     <div id="statusMsg" style="text-align: center; color: var(--primary); font-weight: bold; padding: 10px;">Loading data...</div>
@@ -80,12 +89,11 @@
     </table>
 
     <div class="summary-bar">
-        Grand Total: <span class="total-val">₹<span id="grandTotal">0.00</span></span>
+        Total of Filtered Results: <span class="total-val">₹<span id="grandTotal">0.00</span></span>
     </div>
 </div>
 
 <script>
-    // Aapka Update kiya hua URL
     const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyftBpoYoGk8OB-TEcQr_umHlw_qlpg0AWP8HXLT-NUICCiEKQWeSLUt9ngtOJ3TZGN/exec";
     let allData = [];
 
@@ -116,35 +124,67 @@
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
-        let total = 0;
         
-        // Reverse isliye kiya taaki nayi entry upar dikhe
-        allData.reverse().forEach((item, index) => {
-            total += parseFloat(item.amount) || 0;
+        // Reverse so new entries show on top
+        allData.slice().reverse().forEach((item, index) => {
             const row = tbody.insertRow();
             row.innerHTML = `
                 <td class="tick-col"><input type="checkbox"></td>
-                <td>${item.name}</td>
-                <td>${item.mobile}</td>
-                <td>${item.village}</td>
+                <td class="name-col">${item.name}</td>
+                <td class="mobile-col">${item.mobile}</td>
+                <td class="village-col">${item.village}</td>
                 <td>${item.date.split('T')[0]}</td>
                 <td>${item.timeStart}</td>
                 <td>${item.timeClose}</td>
                 <td>${item.duration}</td>
-                <td>${parseFloat(item.amount).toFixed(2)}</td>
+                <td class="amt-col">${parseFloat(item.amount).toFixed(2)}</td>
                 <td class="no-print">
                     <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
                     <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
                 </td>`;
         });
+        updateStats();
+    }
+
+    // Naya Dynamic Filter Function
+    function filterTable() {
+        let input = document.getElementById("filterInput");
+        let filter = input.value.toUpperCase();
+        let table = document.getElementById("dataTable");
+        let tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let rowText = tr[i].innerText.toUpperCase();
+            if (rowText.indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+        updateStats(); // Total update karein filter ke hisaab se
+    }
+
+    // Visible entries ka total nikaalne ke liye function
+    function updateStats() {
+        let table = document.getElementById("dataTable");
+        let tr = table.getElementsByTagName("tr");
+        let total = 0;
+        let count = 0;
+
+        for (let i = 1; i < tr.length; i++) {
+            if (tr[i].style.display !== "none") {
+                let amt = parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
+                total += amt;
+                count++;
+            }
+        }
         document.getElementById('grandTotal').innerText = total.toFixed(2);
-        document.getElementById('entryCount').innerText = allData.length;
+        document.getElementById('entryCount').innerText = count;
     }
 
     async function saveData() {
         const mainBtn = document.getElementById('mainBtn');
         const rowId = document.getElementById('rowId').value;
-        
         const entry = {
             action: rowId ? "edit" : "add",
             rowId: rowId,
@@ -159,13 +199,9 @@
         };
 
         if (!entry.name || !entry.amount) return alert("Fill Name and Amount!");
-
-        mainBtn.innerText = "Processing Cloud...";
+        mainBtn.innerText = "Saving...";
         mainBtn.disabled = true;
-
         await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
-        
-        // Data save hone ke baad page refresh
         location.reload();
     }
 
@@ -179,25 +215,17 @@
         document.getElementById('timeStart').value = item.timeStart;
         document.getElementById('timeClose').value = item.timeClose;
         document.getElementById('amount').value = item.amount;
-        
-        document.getElementById('mainBtn').innerText = "Update Cloud Row";
+        document.getElementById('mainBtn').innerText = "Update Now";
         document.getElementById('mainBtn').style.background = "var(--primary)";
         window.scrollTo(0,0);
     }
 
     async function deleteEntry(id) {
-        if(confirm("Kya aap sach mein ise hamesha ke liye mitaana chahte hain?")) {
-            document.getElementById('statusMsg').innerText = "Deleting...";
-            document.getElementById('statusMsg').style.display = "block";
-            await fetch(GOOGLE_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({action: "delete", rowId: id}) 
-            });
+        if(confirm("Hamesha ke liye mita dein?")) {
+            await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", rowId: id}) });
             location.reload();
         }
     }
 </script>
-
 </body>
 </html>
