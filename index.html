@@ -3,68 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Updated Tracker</title>
+    <title>Computer Kraha - Ultimate Tracker</title>
     <style>
-        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #eef2f7; color: #333; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+        :root { 
+            --primary: #007bff; 
+            --success: #28a745; 
+            --warning: #ffc107; 
+            --danger: #dc3545; 
+            --dark: #343a40; 
+            --light: #f8f9fa;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #eef2f7; color: #333; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
+        /* Print logic: Hides everything except the table and total */
+        @media print {
+            .input-group, .filter-section, .actions, .btn-print, h2, .no-print { display: none !important; }
+            body { background: white; margin: 0; }
+            .container { box-shadow: none; max-width: 100%; padding: 0; border: none; }
+            table { width: 100%; border: 1px solid #000; font-size: 12px; }
+            th, td { border: 1px solid #000 !important; padding: 8px; }
+            .summary-bar { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; margin-top: 10px; }
+        }
+
+        h2 { text-align: center; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-top: 0; }
+        
+        /* Layout for Inputs */
         .input-group { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-            gap: 12px; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+            gap: 12px; margin-bottom: 20px; padding: 20px; background: var(--light); border-radius: 8px; border: 1px solid #ddd;
         }
         label { font-size: 0.8rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         
         .btn-main { background: var(--success); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 22px; transition: 0.3s; }
-        .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
-        
-        .filter-section { margin: 20px 0; display: flex; align-items: center; gap: 10px; background: #fff; padding: 10px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+        .btn-main:hover { opacity: 0.9; }
+
+        .btn-print { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; float: right; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .btn-print:hover { background: #000; }
+
+        .filter-section { margin: 20px 0; display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff; border-radius: 5px; border: 1px solid #eee; }
+
+        /* Table Design */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
         th { background: var(--primary); color: white; font-weight: 600; }
         tr:nth-child(even) { background-color: #fcfcfc; }
         
-        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.25rem; }
+        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.3rem; }
         .grand-total { font-weight: bold; color: #50fa7b; margin-left: 10px; }
-        .actions button { padding: 6px 10px; cursor: pointer; border: none; border-radius: 4px; margin-right: 5px; font-weight: bold; }
+
+        .actions { display: flex; gap: 5px; }
+        .btn-edit { background: var(--warning); border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-del { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Data Tracker (New Script Connection)</h2>
+    <h2>Project Tracker & Records</h2>
+
+    <button onclick="window.print()" class="btn-print">⎙ Print Table</button>
 
     <div class="input-group">
-        <div><label>Name</label><input type="text" id="name" placeholder="Name"></div>
-        <div><label>Village</label><input type="text" id="village" placeholder="Village"></div>
+        <div><label>Name</label><input type="text" id="name" placeholder="Full Name"></div>
+        <div><label>Mobile</label><input type="text" id="mobile" placeholder="Mobile Number"></div>
+        <div><label>Village</label><input type="text" id="village" placeholder="Village Name"></div>
         <div><label>Date</label><input type="date" id="date"></div>
         <div><label>Start Time</label><input type="time" id="timeStart"></div>
         <div><label>Close Time</label><input type="time" id="timeClose"></div>
-        <div><label>Amount</label><input type="number" id="amount" placeholder="0.00"></div>
+        <div><label>Amount (₹)</label><input type="number" id="amount" placeholder="0.00"></div>
         <button onclick="addOrUpdateRow()" id="addBtn" class="btn-main">Add Entry</button>
     </div>
 
     <div class="filter-section">
-        <strong>Search:</strong>
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name or Village..." style="width: 300px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <strong>Quick Search:</strong>
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name, Mobile, or Village..." style="width: 350px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
     </div>
 
     <table id="dataTable">
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Mobile</th>
                 <th>Village</th>
                 <th>Date</th>
                 <th>Start</th>
                 <th>Close</th>
                 <th>Total Time</th>
-                <th>Amount</th>
-                <th>Actions</th>
+                <th>Amount (₹)</th>
+                <th class="no-print">Actions</th>
             </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+            </tbody>
     </table>
 
     <div class="summary-bar">
@@ -74,109 +107,11 @@
 
 <script>
     let editRow = null;
-    // Aapka naya Google Script URL
+    // Your Google Script URL
     const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbw82-h48g8brLsBweQdsB4ejY6jn90Hdh4AoZTr3LtFQVn_G1QDevxPmabYB0wvqZCL/exec";
 
+    // Function to calculate hours and minutes
     function calculateDuration(s, e) {
         if (!s || !e) return "0h 0m";
         let start = new Date("2000/01/01 " + s);
         let end = new Date("2000/01/01 " + e);
-        let diff = end - start;
-        if (diff < 0) diff += 86400000;
-        let h = Math.floor(diff / 3600000);
-        let m = Math.floor((diff % 3600000) / 60000);
-        return h + "h " + m + "m";
-    }
-
-    async function addOrUpdateRow() {
-        const name = document.getElementById('name').value;
-        const village = document.getElementById('village').value;
-        const date = document.getElementById('date').value;
-        const timeStart = document.getElementById('timeStart').value;
-        const timeClose = document.getElementById('timeClose').value;
-        const amountStr = document.getElementById('amount').value;
-        const amount = parseFloat(amountStr) || 0;
-        const duration = calculateDuration(timeStart, timeClose);
-
-        if (!name || amountStr === "") return alert("Please fill Name and Amount!");
-
-        const dataObj = { name, village, date, timeStart, timeClose, duration, amount: amount.toFixed(2) };
-
-        // Data Google Sheets ko bhej raha hai
-        fetch(GOOGLE_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            cache: 'no-cache',
-            body: JSON.stringify(dataObj)
-        }).then(() => {
-            console.log("Data Sent Successfully");
-        }).catch(err => alert("Error connecting to Google Sheets"));
-
-        if (editRow) {
-            editRow.cells[0].innerText = name;
-            editRow.cells[1].innerText = village;
-            editRow.cells[2].innerText = date;
-            editRow.cells[3].innerText = timeStart;
-            editRow.cells[4].innerText = timeClose;
-            editRow.cells[5].innerText = duration;
-            editRow.cells[6].innerText = amount.toFixed(2);
-            editRow = null;
-            document.getElementById('addBtn').innerText = "Add Entry";
-            document.getElementById('addBtn').style.background = "var(--success)";
-        } else {
-            const tbody = document.getElementById('dataTable').querySelector('tbody');
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${name}</td><td>${village}</td><td>${date}</td><td>${timeStart}</td><td>${timeClose}</td><td>${duration}</td><td>${amount.toFixed(2)}</td>
-                <td class="actions">
-                    <button style="background:var(--warning)" onclick="startEdit(this)">Edit</button>
-                    <button style="background:var(--danger);color:white" onclick="deleteRow(this)">Del</button>
-                </td>`;
-        }
-        updateTotal();
-        clearFields();
-    }
-
-    function startEdit(btn) {
-        editRow = btn.parentElement.parentElement;
-        document.getElementById('name').value = editRow.cells[0].innerText;
-        document.getElementById('village').value = editRow.cells[1].innerText;
-        document.getElementById('date').value = editRow.cells[2].innerText;
-        document.getElementById('timeStart').value = editRow.cells[3].innerText;
-        document.getElementById('timeClose').value = editRow.cells[4].innerText;
-        document.getElementById('amount').value = editRow.cells[6].innerText;
-        document.getElementById('addBtn').innerText = "Update Entry";
-        document.getElementById('addBtn').style.background = "var(--primary)";
-        window.scrollTo(0,0);
-    }
-
-    function deleteRow(btn) {
-        if(confirm("Delete from screen? (Sheet data won't be deleted)")) {
-            btn.parentElement.parentElement.remove();
-            updateTotal();
-        }
-    }
-
-    function updateTotal() {
-        let total = 0;
-        document.querySelectorAll('tbody tr').forEach(r => {
-            total += parseFloat(r.cells[6].innerText) || 0;
-        });
-        document.getElementById('grandTotal').innerText = total.toFixed(2);
-    }
-
-    function clearFields() {
-        ['name', 'village', 'date', 'timeStart', 'timeClose', 'amount'].forEach(id => document.getElementById(id).value = '');
-    }
-
-    function filterTable() {
-        let q = document.getElementById('filterInput').value.toUpperCase();
-        document.querySelectorAll('tbody tr').forEach(r => {
-            let match = r.cells[0].innerText.toUpperCase().includes(q) || r.cells[1].innerText.toUpperCase().includes(q);
-            r.style.display = match ? "" : "none";
-        });
-    }
-</script>
-
-</body>
-</html>
