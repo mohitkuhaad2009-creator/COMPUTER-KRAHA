@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Tracker with History</title>
+    <title>Computer Kraha - Final Tracker with History</title>
     <style>
         :root { 
             --primary: #007bff; --success: #28a745; --warning: #ffc107; 
@@ -14,7 +14,7 @@
         .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
         @media print {
-            .input-group, .filter-section, .actions, .btn-print, h2, .history-header { display: none !important; }
+            .input-group, .filter-section, .actions, .btn-print, h2, .history-header, .btn-clear { display: none !important; }
             body { background: white; margin: 0; }
             .container { box-shadow: none; max-width: 100%; padding: 0; border: none; }
             table { width: 100%; border: 1px solid #000; font-size: 11px; }
@@ -54,26 +54,26 @@
 <body>
 
 <div class="container">
-    <h2>Data Entry</h2>
+    <h2>Computer Kraha Tracker</h2>
 
     <button onclick="window.print()" class="btn-print">⎙ Print Report</button>
 
     <div class="input-group">
-        <div><label>Name</label><input type="text" id="name"></div>
-        <div><label>Mobile</label><input type="text" id="mobile"></div>
-        <div><label>Village</label><input type="text" id="village"></div>
+        <div><label>Name</label><input type="text" id="name" placeholder="Full Name"></div>
+        <div><label>Mobile</label><input type="text" id="mobile" placeholder="Mobile Number"></div>
+        <div><label>Village</label><input type="text" id="village" placeholder="Village"></div>
         <div><label>Date</label><input type="date" id="date"></div>
         <div><label>Start Time</label><input type="time" id="timeStart"></div>
         <div><label>Close Time</label><input type="time" id="timeClose"></div>
-        <div><label>Amount (₹)</label><input type="number" id="amount"></div>
-        <button onclick="addOrUpdateRow()" id="addBtn" class="btn-main">Save Entry</button>
+        <div><label>Amount (₹)</label><input type="number" id="amount" placeholder="0.00"></div>
+        <button onclick="addOrUpdateRow()" id="addBtn" class="btn-main">Add Entry</button>
     </div>
 
     <h2 class="history-header">Transaction History</h2>
 
     <div class="filter-section">
-        <strong>Search History:</strong>
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search Name, Village, Mobile..." style="width: 350px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <strong>Filter:</strong>
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="Search History..." style="width: 350px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
     </div>
 
     <table id="dataTable">
@@ -94,17 +94,21 @@
     </table>
 
     <div class="summary-bar">
-        Total of History: <span class="grand-total">₹<span id="grandTotal">0.00</span></span>
+        Total Amount: <span class="grand-total">₹<span id="grandTotal">0.00</span></span>
     </div>
-    <button onclick="clearHistory()" class="btn-clear no-print">Clear All History</button>
+    
+    <button onclick="clearHistory()" class="btn-clear no-print">Clear Local View</button>
 </div>
 
 <script>
     let editIndex = null;
-    let transactionHistory = JSON.parse(localStorage.getItem('trackerHistory')) || [];
+    // Updated Google URL
     const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbzIrh-DcM2CHOpfakZPwXLQYvvdvzo6-SY7r1kd7tQ0i8kS11oI4MlfYGVtqUvMebxw/exec";
 
-    // Load history on startup
+    // Storage for local history
+    let historyData = JSON.parse(localStorage.getItem('trackerHistory')) || [];
+
+    // On Load: Render history
     window.onload = renderTable;
 
     function calculateDuration(s, e) {
@@ -113,7 +117,9 @@
         let end = new Date("2000/01/01 " + e);
         let diff = end - start;
         if (diff < 0) diff += 86400000;
-        return Math.floor(diff/3600000) + "h " + Math.floor((diff%3600000)/60000) + "m";
+        let h = Math.floor(diff / 3600000);
+        let m = Math.floor((diff % 3600000) / 60000);
+        return `${h}h ${m}m`;
     }
 
     async function addOrUpdateRow() {
@@ -130,16 +136,20 @@
 
         if (!entry.name || isNaN(entry.amount)) return alert("Please enter Name and Amount!");
 
-        // Send to Google Sheets
-        fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
+        // Send to Google Sheets (POST)
+        fetch(GOOGLE_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(entry) 
+        });
 
         if (editIndex !== null) {
-            transactionHistory[editIndex] = entry;
+            historyData[editIndex] = entry;
             editIndex = null;
-            document.getElementById('addBtn').innerText = "Save Entry";
+            document.getElementById('addBtn').innerText = "Add Entry";
             document.getElementById('addBtn').style.background = "var(--success)";
         } else {
-            transactionHistory.push(entry);
+            historyData.push(entry);
         }
 
         saveAndRender();
@@ -151,7 +161,7 @@
         tbody.innerHTML = '';
         let total = 0;
 
-        transactionHistory.forEach((item, index) => {
+        historyData.forEach((item, index) => {
             total += item.amount;
             const row = tbody.insertRow();
             row.innerHTML = `
@@ -167,13 +177,13 @@
     }
 
     function saveAndRender() {
-        localStorage.setItem('trackerHistory', JSON.stringify(transactionHistory));
+        localStorage.setItem('trackerHistory', JSON.stringify(historyData));
         renderTable();
     }
 
     function startEdit(index) {
         editIndex = index;
-        const item = transactionHistory[index];
+        const item = historyData[index];
         document.getElementById('name').value = item.name;
         document.getElementById('mobile').value = item.mobile;
         document.getElementById('village').value = item.village;
@@ -182,21 +192,21 @@
         document.getElementById('timeClose').value = item.timeClose;
         document.getElementById('amount').value = item.amount;
         
-        document.getElementById('addBtn').innerText = "Update History Entry";
+        document.getElementById('addBtn').innerText = "Update Entry";
         document.getElementById('addBtn').style.background = "var(--primary)";
         window.scrollTo(0,0);
     }
 
     function deleteEntry(index) {
-        if(confirm("Delete this from history?")) {
-            transactionHistory.splice(index, 1);
+        if(confirm("Are you sure you want to delete this locally?")) {
+            historyData.splice(index, 1);
             saveAndRender();
         }
     }
 
     function clearHistory() {
-        if(confirm("Are you sure? This will delete ALL history from this screen.")) {
-            transactionHistory = [];
+        if(confirm("This will clear the history from this screen. (Google Sheet data will remain safe)")) {
+            historyData = [];
             saveAndRender();
         }
     }
