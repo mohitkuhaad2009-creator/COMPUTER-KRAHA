@@ -213,3 +213,52 @@
 </script>
 </body>
 </html>
+<div class="summary-bar">
+        <div style="float: left; text-align: left;">
+            Total Machine Run Time: <span class="total-val" id="grandTotalTime">0h 0m</span>
+        </div>
+        Grand Total Amount: <span class="total-val">₹<span id="grandTotal">0.00</span></span>
+    </div>
+</div>
+
+<script>
+    // ... (Purane functions wahi rahenge) ...
+
+    function updateStats() {
+        let table = document.getElementById("dataTable");
+        let tr = table.getElementsByTagName("tr");
+        let totalAmount = 0;
+        let totalMinutes = 0;
+        let count = 0;
+
+        for (let i = 1; i < tr.length; i++) {
+            if (tr[i].style.display !== "none") {
+                // 1. Amount calculate karein
+                let amt = parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
+                totalAmount += amt;
+
+                // 2. Time calculate karein (Duration column se)
+                // Duration format "2h 30m" hota hai, use parse karna hoga
+                let durationText = tr[i].cells[7].innerText; // 8th column (index 7)
+                let timeParts = durationText.match(/(\d+)h\s+(\d+)m/);
+                if (timeParts) {
+                    let hours = parseInt(timeParts[1]);
+                    let mins = parseInt(timeParts[2]);
+                    totalMinutes += (hours * 60) + mins;
+                }
+                count++;
+            }
+        }
+
+        // Minutes ko wapas Hours aur Minutes mein badlein
+        let finalHours = Math.floor(totalMinutes / 60);
+        let finalMins = totalMinutes % 60;
+
+        // UI Update karein
+        document.getElementById('grandTotal').innerText = totalAmount.toFixed(2);
+        document.getElementById('grandTotalTime').innerText = finalHours + "h " + finalMins + "m";
+        document.getElementById('entryCount').innerText = count;
+    }
+
+    // ... (Baki fetch aur save functions wahi rahenge) ...
+</script>
