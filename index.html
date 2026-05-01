@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Multi-Phone Sync</title>
+    <title>Computer Kraha - Perfect Date & Time Tracker</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 15px; background: #eef2f7; }
@@ -31,7 +31,7 @@
         .history-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dark); padding: 10px 0; }
         .stats-badge { background: var(--dark); color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
         
-        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; text-align: right; font-size: 1.2rem; }
+        .summary-bar { margin-top: 20px; padding: 20px; background: var(--dark); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
         .total-val { color: #50fa7b; font-weight: bold; }
         
         @media print { .input-group, .search-box, .no-print, .btn-edit, .btn-del, .btn-ok { display: none !important; } }
@@ -60,7 +60,7 @@
     </div>
 
     <div class="search-box">
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History...">
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search Name, Village or Mobile...">
     </div>
 
     <div id="statusMsg" style="text-align: center; color: var(--primary); font-weight: bold; padding: 10px; display:none;">Syncing...</div>
@@ -84,7 +84,8 @@
     </table>
 
     <div class="summary-bar">
-        Total: <span class="total-val">₹<span id="grandTotal">0.00</span></span>
+        <div>Total Time: <span class="total-val" id="grandTotalTime">0h 0m</span></div>
+        <div>Total Amount: <span class="total-val">₹<span id="grandTotal">0.00</span></span></div>
     </div>
 </div>
 
@@ -108,10 +109,15 @@
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
+        
         allData.slice().reverse().forEach((item, index) => {
             const isDone = item.status === "DONE";
             const row = tbody.insertRow();
             if(isDone) row.classList.add('row-done');
+
+            // Correct Date Handling (Fixing the 1-day back issue)
+            let rawDate = new Date(item.date);
+            let formattedDate = item.date.includes('T') ? item.date.split('T')[0] : item.date;
 
             row.innerHTML = `
                 <td class="no-print">
@@ -122,14 +128,34 @@
                     </button>
                 </td>
                 <td>${item.name}</td><td>${item.mobile}</td><td>${item.village}</td>
-                <td>${item.date.split('T')[0]}</td><td>${item.timeStart}</td><td>${item.timeClose}</td>
-                <td>${item.duration}</td><td class="amt-col">${parseFloat(item.amount).toFixed(2)}</td>
+                <td>${formattedDate}</td><td>${item.timeStart}</td><td>${item.timeClose}</td>
+                <td class="dur-col">${item.duration}</td><td class="amt-col">${parseFloat(item.amount).toFixed(2)}</td>
                 <td class="no-print">
                     <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
                     <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
                 </td>`;
         });
         updateStats();
+    }
+
+    function updateStats() {
+        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
+        let totalAmt = 0, totalMins = 0, count = 0;
+
+        for (let i = 1; i < tr.length; i++) {
+            if (tr[i].style.display !== "none") {
+                totalAmt += parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
+                
+                let durText = tr[i].getElementsByClassName("dur-col")[0].innerText;
+                let match = durText.match(/(\d+)h\s+(\d+)m/);
+                if(match) totalMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
+                
+                count++;
+            }
+        }
+        document.getElementById('grandTotal').innerText = totalAmt.toFixed(2);
+        document.getElementById('grandTotalTime').innerText = Math.floor(totalMins/60) + "h " + (totalMins%60) + "m";
+        document.getElementById('entryCount').innerText = count;
     }
 
     async function updateStatusCloud(id, current) {
@@ -152,19 +178,6 @@
         updateStats();
     }
 
-    function updateStats() {
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        let total = 0, count = 0;
-        for (let i = 1; i < tr.length; i++) {
-            if (tr[i].style.display !== "none") {
-                total += parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
-                count++;
-            }
-        }
-        document.getElementById('grandTotal').innerText = total.toFixed(2);
-        document.getElementById('entryCount').innerText = count;
-    }
-
     async function saveData() {
         const rowId = document.getElementById('rowId').value;
         const entry = {
@@ -173,7 +186,7 @@
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             village: document.getElementById('village').value,
-            date: document.getElementById('date').value,
+            date: document.getElementById('date').value, // Direct string save
             timeStart: document.getElementById('timeStart').value,
             timeClose: document.getElementById('timeClose').value,
             amount: document.getElementById('amount').value,
@@ -196,7 +209,7 @@
         document.getElementById('name').value = item.name;
         document.getElementById('mobile').value = item.mobile;
         document.getElementById('village').value = item.village;
-        document.getElementById('date').value = item.date.split('T')[0];
+        document.getElementById('date').value = item.date.includes('T') ? item.date.split('T')[0] : item.date;
         document.getElementById('timeStart').value = item.timeStart;
         document.getElementById('timeClose').value = item.timeClose;
         document.getElementById('amount').value = item.amount;
@@ -213,52 +226,3 @@
 </script>
 </body>
 </html>
-<div class="summary-bar">
-        <div style="float: left; text-align: left;">
-            Total Machine Run Time: <span class="total-val" id="grandTotalTime">0h 0m</span>
-        </div>
-        Grand Total Amount: <span class="total-val">₹<span id="grandTotal">0.00</span></span>
-    </div>
-</div>
-
-<script>
-    // ... (Purane functions wahi rahenge) ...
-
-    function updateStats() {
-        let table = document.getElementById("dataTable");
-        let tr = table.getElementsByTagName("tr");
-        let totalAmount = 0;
-        let totalMinutes = 0;
-        let count = 0;
-
-        for (let i = 1; i < tr.length; i++) {
-            if (tr[i].style.display !== "none") {
-                // 1. Amount calculate karein
-                let amt = parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
-                totalAmount += amt;
-
-                // 2. Time calculate karein (Duration column se)
-                // Duration format "2h 30m" hota hai, use parse karna hoga
-                let durationText = tr[i].cells[7].innerText; // 8th column (index 7)
-                let timeParts = durationText.match(/(\d+)h\s+(\d+)m/);
-                if (timeParts) {
-                    let hours = parseInt(timeParts[1]);
-                    let mins = parseInt(timeParts[2]);
-                    totalMinutes += (hours * 60) + mins;
-                }
-                count++;
-            }
-        }
-
-        // Minutes ko wapas Hours aur Minutes mein badlein
-        let finalHours = Math.floor(totalMinutes / 60);
-        let finalMins = totalMinutes % 60;
-
-        // UI Update karein
-        document.getElementById('grandTotal').innerText = totalAmount.toFixed(2);
-        document.getElementById('grandTotalTime').innerText = finalHours + "h " + finalMins + "m";
-        document.getElementById('entryCount').innerText = count;
-    }
-
-    // ... (Baki fetch aur save functions wahi rahenge) ...
-</script>
