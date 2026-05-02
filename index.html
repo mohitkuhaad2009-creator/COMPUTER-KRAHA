@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Perfect Sync Tracker</title>
+    <title>Computer Kraha - Full Detail Tracker</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 10px; background: #eef2f7; }
@@ -11,30 +11,31 @@
         
         .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 15px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
         label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
         .btn { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
         .btn-save { background: var(--success); width: 100%; margin-top: 18px; }
-        .btn-edit { background: var(--warning); color: #000; padding: 5px 8px; font-size: 12px; margin-right: 2px; }
+        .btn-edit { background: var(--warning); color: #000; padding: 5px 8px; font-size: 12px; }
         .btn-del { background: var(--danger); padding: 5px 8px; font-size: 12px; }
         .btn-ok { font-size: 11px; padding: 5px 10px; min-width: 60px; }
         
         .row-done { background-color: #d4edda !important; }
+        .expense-row { background-color: #fff5f5 !important; border-left: 5px solid var(--danger); }
         
         .search-box { margin-bottom: 15px; }
         .search-box input { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; }
 
-        table { width: 100%; border-collapse: collapse; background: white; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
-        tr:nth-child(even) { background: #f9f9f9; }
 
         .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; flex-wrap: wrap; gap: 10px; }
-        .total-val { color: #50fa7b; font-weight: bold; }
+        .total-val { font-weight: bold; }
+        .val-in { color: #50fa7b; }
+        .val-out { color: #ff6b6b; }
         
         #statusMsg { text-align: center; color: var(--primary); font-weight: bold; padding: 5px; display: none; }
-        
-        @media print { .input-group, .search-box, .no-print, .btn-edit, .btn-del, .btn-ok { display: none !important; } }
+        @media print { .input-group, .search-box, .no-print { display: none !important; } }
     </style>
 </head>
 <body>
@@ -42,18 +43,25 @@
 <div class="container">
     <div class="input-group">
         <input type="hidden" id="rowId">
-        <div><label>Name</label><input type="text" id="name"></div>
-        <div><label>Mobile</label><input type="text" id="mobile"></div>
-        <div><label>Village</label><input type="text" id="village"></div>
+        <div>
+            <label>Category</label>
+            <select id="category" onchange="toggleFields()">
+                <option value="INCOME">INCOME (Kamayi)</option>
+                <option value="EXPENSE">EXPENSE (Kharcha)</option>
+            </select>
+        </div>
+        <div><label>Name/Detail</label><input type="text" id="name"></div>
+        <div id="mobileDiv"><label>Mobile</label><input type="text" id="mobile"></div>
+        <div id="villageDiv"><label>Village</label><input type="text" id="village"></div>
         <div><label>Date</label><input type="date" id="date"></div>
-        <div><label>Start</label><input type="time" id="timeStart"></div>
-        <div><label>Close</label><input type="time" id="timeClose"></div>
+        <div class="time-field"><label>Start</label><input type="time" id="timeStart"></div>
+        <div class="time-field"><label>Close</label><input type="time" id="timeClose"></div>
         <div><label>Amount (₹)</label><input type="number" id="amount"></div>
         <button onclick="saveData()" id="mainBtn" class="btn btn-save">Save & Sync</button>
     </div>
 
     <div class="search-box">
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History (Name, Village, Mobile)...">
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History...">
     </div>
 
     <div id="statusMsg">Syncing with Cloud...</div>
@@ -62,7 +70,8 @@
         <thead>
             <tr>
                 <th class="no-print">OK</th>
-                <th>Name</th>
+                <th>Type</th>
+                <th>Name/Detail</th>
                 <th>Mobile</th>
                 <th>Village</th>
                 <th>Date</th>
@@ -77,126 +86,100 @@
     </table>
 
     <div class="summary-bar">
-        <div>Total Time: <span class="total-val" id="grandTotalTime">0h 0m</span></div>
-        <div>Grand Total: <span class="total-val">₹<span id="grandTotal">0.00</span></span></div>
+        <div>Income: <span class="total-val val-in">₹<span id="grandTotalIn">0.00</span></span></div>
+        <div>Expense: <span class="total-val val-out">₹<span id="grandTotalOut">0.00</span></span></div>
+        <div>Net: <span class="total-val">₹<span id="netProfit">0.00</span></span></div>
     </div>
 </div>
 
 <script>
-    // UPDATED URL
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwWq4O_u7I-6vHZJLbpsFP3-cPI-4K2Tt2Qx_afDqACLE3SXL7UpCufKSYEA4yiUmZC/exec";
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbw44bAFbp9SL-Z_tuMwxUwCDgGUE7MqBHp-qbBsUvXYUnWE0sEoSQO9yBynUnn_xTl1/exec";
     let allData = [];
 
     window.onload = fetchHistory;
 
+    function toggleFields() {
+        let isExp = document.getElementById('category').value === 'EXPENSE';
+        document.getElementById('mobileDiv').style.display = isExp ? 'none' : 'block';
+        document.getElementById('villageDiv').style.display = isExp ? 'none' : 'block';
+        document.querySelectorAll('.time-field').forEach(f => f.style.display = isExp ? 'none' : 'block');
+    }
+
     async function fetchHistory() {
-        const status = document.getElementById('statusMsg');
-        status.style.display = "block";
+        document.getElementById('statusMsg').style.display = "block";
         try {
             const res = await fetch(GOOGLE_URL);
             allData = await res.json();
             renderTable();
-            status.style.display = "none";
-        } catch (err) { status.innerText = "Connection Error! Refresh again."; }
+            document.getElementById('statusMsg').style.display = "none";
+        } catch (err) { alert("Error connecting to Google Sheet!"); }
     }
 
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
-        
-        // Reverse so new entries stay on top
+        let tIn = 0, tOut = 0;
+
         allData.slice().reverse().forEach((item, index) => {
             const isDone = item.status === "DONE";
+            const isExp = item.category === "EXPENSE";
             const row = tbody.insertRow();
             if(isDone) row.classList.add('row-done');
+            if(isExp) row.classList.add('expense-row');
+
+            let amt = parseFloat(item.amount) || 0;
+            if(isExp) tOut += amt; else tIn += amt;
 
             row.innerHTML = `
                 <td class="no-print">
-                    <button class="btn btn-ok" 
-                        style="background: ${isDone ? 'var(--success)' : '#6c757d'}" 
-                        onclick="updateStatusCloud(${item.rowId}, '${item.status}')">
-                        ${isDone ? 'DONE' : 'OK'}
-                    </button>
+                    <button class="btn btn-ok" style="background:${isDone?'#28a745':'#6c757d'}" onclick="updateStatusCloud(${item.rowId},'${item.status}')">${isDone?'DONE':'OK'}</button>
                 </td>
+                <td><small><b>${item.category || 'INCOME'}</b></small></td>
                 <td>${item.name}</td>
-                <td>${item.mobile}</td>
-                <td>${item.village}</td>
+                <td>${item.mobile || '-'}</td>
+                <td>${item.village || '-'}</td>
                 <td>${item.date}</td>
-                <td>${item.timeStart}</td>
-                <td>${item.timeClose}</td>
-                <td class="dur-col">${item.duration}</td>
-                <td class="amt-col">${item.amount}</td>
+                <td>${item.timeStart || '-'}</td>
+                <td>${item.timeClose || '-'}</td>
+                <td>${item.duration || '-'}</td>
+                <td style="color:${isExp?'red':'green'}; font-weight:bold">${amt.toFixed(2)}</td>
                 <td class="no-print">
                     <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
                     <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
                 </td>`;
         });
-        updateStats();
-    }
-
-    async function updateStatusCloud(id, current) {
-        const next = current === "DONE" ? "PENDING" : "DONE";
-        document.getElementById('statusMsg').style.display = "block";
-        await fetch(GOOGLE_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify({action: "status_update", rowId: id, status: next}) 
-        });
-        fetchHistory(); // Sync back
-    }
-
-    function updateStats() {
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        let totalAmt = 0, totalMins = 0;
-
-        for (let i = 1; i < tr.length; i++) {
-            if (tr[i].style.display !== "none") {
-                totalAmt += parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
-                
-                let durText = tr[i].getElementsByClassName("dur-col")[0].innerText;
-                let match = durText.match(/(\d+)h\s+(\d+)m/);
-                if(match) totalMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
-            }
-        }
-        document.getElementById('grandTotal').innerText = totalAmt.toFixed(2);
-        document.getElementById('grandTotalTime').innerText = Math.floor(totalMins/60) + "h " + (totalMins%60) + "m";
-    }
-
-    function filterTable() {
-        let filter = document.getElementById("filterInput").value.toUpperCase();
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        for (let i = 1; i < tr.length; i++) {
-            tr[i].style.display = tr[i].innerText.toUpperCase().includes(filter) ? "" : "none";
-        }
-        updateStats();
+        document.getElementById('grandTotalIn').innerText = tIn.toFixed(2);
+        document.getElementById('grandTotalOut').innerText = tOut.toFixed(2);
+        document.getElementById('netProfit').innerText = (tIn - tOut).toFixed(2);
     }
 
     async function saveData() {
-        const mainBtn = document.getElementById('mainBtn');
         const rowId = document.getElementById('rowId').value;
-        
+        const cat = document.getElementById('category').value;
+        const sTime = document.getElementById('timeStart').value;
+        const cTime = document.getElementById('timeClose').value;
+
         const entry = {
             action: rowId ? "edit" : "add",
             rowId: rowId,
+            category: cat,
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             village: document.getElementById('village').value,
             date: document.getElementById('date').value,
-            timeStart: document.getElementById('timeStart').value,
-            timeClose: document.getElementById('timeClose').value,
+            timeStart: (cat==='EXPENSE') ? "-" : sTime,
+            timeClose: (cat==='EXPENSE') ? "-" : cTime,
             amount: document.getElementById('amount').value,
             duration: (function(s,e){
-                if(!s||!e) return "0h 0m";
+                if(cat==='EXPENSE' || !s || !e) return "-";
                 let diff = new Date("2000/01/01 "+e) - new Date("2000/01/01 "+s);
                 if(diff<0) diff+=86400000;
                 return Math.floor(diff/3600000)+"h "+Math.floor((diff%3600000)/60000)+"m";
-            })(document.getElementById('timeStart').value, document.getElementById('timeClose').value)
+            })(sTime, cTime)
         };
 
-        if(!entry.name || !entry.date) return alert("Fill Name & Date!");
-        
-        mainBtn.innerText = "Syncing...";
-        mainBtn.disabled = true;
+        if(!entry.name || !entry.amount) return alert("Fill Name and Amount!");
+        document.getElementById('mainBtn').innerText = "Syncing...";
         await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
         location.reload();
     }
@@ -204,249 +187,35 @@
     function editEntry(idx) {
         const item = allData[idx];
         document.getElementById('rowId').value = item.rowId;
+        document.getElementById('category').value = item.category || 'INCOME';
         document.getElementById('name').value = item.name;
-        document.getElementById('mobile').value = item.mobile;
-        document.getElementById('village').value = item.village;
+        document.getElementById('mobile').value = item.mobile || "";
+        document.getElementById('village').value = item.village || "";
         document.getElementById('date').value = item.date;
-        document.getElementById('timeStart').value = item.timeStart;
-        document.getElementById('timeClose').value = item.timeClose;
+        document.getElementById('timeStart').value = (item.timeStart === "-") ? "" : item.timeStart;
+        document.getElementById('timeClose').value = (item.timeClose === "-") ? "" : item.timeClose;
         document.getElementById('amount').value = item.amount;
+        toggleFields();
         document.getElementById('mainBtn').innerText = "Update Now";
-        document.getElementById('mainBtn').style.background = "var(--primary)";
         window.scrollTo(0,0);
-    }
-
-    async function deleteEntry(id) {
-        if(confirm("Delete Permanently from Cloud?")) {
-            await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", rowId: id}) });
-            location.reload();
-        }
-    }
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Perfect Sync Tracker</title>
-    <style>
-        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 10px; background: #eef2f7; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
-        .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 15px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
-        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        
-        .btn { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
-        .btn-save { background: var(--success); width: 100%; margin-top: 18px; }
-        .btn-edit { background: var(--warning); color: #000; padding: 5px 8px; font-size: 12px; margin-right: 2px; }
-        .btn-del { background: var(--danger); padding: 5px 8px; font-size: 12px; }
-        .btn-ok { font-size: 11px; padding: 5px 10px; min-width: 60px; }
-        
-        .row-done { background-color: #d4edda !important; }
-        
-        .search-box { margin-bottom: 15px; }
-        .search-box input { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; }
-
-        table { width: 100%; border-collapse: collapse; background: white; font-size: 13px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
-        tr:nth-child(even) { background: #f9f9f9; }
-
-        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; flex-wrap: wrap; gap: 10px; }
-        .total-val { color: #50fa7b; font-weight: bold; }
-        
-        #statusMsg { text-align: center; color: var(--primary); font-weight: bold; padding: 5px; display: none; }
-        
-        @media print { .input-group, .search-box, .no-print, .btn-edit, .btn-del, .btn-ok { display: none !important; } }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="input-group">
-        <input type="hidden" id="rowId">
-        <div><label>Name</label><input type="text" id="name"></div>
-        <div><label>Mobile</label><input type="text" id="mobile"></div>
-        <div><label>Village</label><input type="text" id="village"></div>
-        <div><label>Date</label><input type="date" id="date"></div>
-        <div><label>Start</label><input type="time" id="timeStart"></div>
-        <div><label>Close</label><input type="time" id="timeClose"></div>
-        <div><label>Amount (₹)</label><input type="number" id="amount"></div>
-        <button onclick="saveData()" id="mainBtn" class="btn btn-save">Save & Sync</button>
-    </div>
-
-    <div class="search-box">
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History (Name, Village, Mobile)...">
-    </div>
-
-    <div id="statusMsg">Syncing with Cloud...</div>
-
-    <table id="dataTable">
-        <thead>
-            <tr>
-                <th class="no-print">OK</th>
-                <th>Name</th>
-                <th>Mobile</th>
-                <th>Village</th>
-                <th>Date</th>
-                <th>Start</th>
-                <th>Close</th>
-                <th>Duration</th>
-                <th>Amount</th>
-                <th class="no-print">Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <div class="summary-bar">
-        <div>Total Time: <span class="total-val" id="grandTotalTime">0h 0m</span></div>
-        <div>Grand Total: <span class="total-val">₹<span id="grandTotal">0.00</span></span></div>
-    </div>
-</div>
-
-<script>
-    // UPDATED URL
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwWq4O_u7I-6vHZJLbpsFP3-cPI-4K2Tt2Qx_afDqACLE3SXL7UpCufKSYEA4yiUmZC/exec";
-    let allData = [];
-
-    window.onload = fetchHistory;
-
-    async function fetchHistory() {
-        const status = document.getElementById('statusMsg');
-        status.style.display = "block";
-        try {
-            const res = await fetch(GOOGLE_URL);
-            allData = await res.json();
-            renderTable();
-            status.style.display = "none";
-        } catch (err) { status.innerText = "Connection Error! Refresh again."; }
-    }
-
-    function renderTable() {
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
-        
-        // Reverse so new entries stay on top
-        allData.slice().reverse().forEach((item, index) => {
-            const isDone = item.status === "DONE";
-            const row = tbody.insertRow();
-            if(isDone) row.classList.add('row-done');
-
-            row.innerHTML = `
-                <td class="no-print">
-                    <button class="btn btn-ok" 
-                        style="background: ${isDone ? 'var(--success)' : '#6c757d'}" 
-                        onclick="updateStatusCloud(${item.rowId}, '${item.status}')">
-                        ${isDone ? 'DONE' : 'OK'}
-                    </button>
-                </td>
-                <td>${item.name}</td>
-                <td>${item.mobile}</td>
-                <td>${item.village}</td>
-                <td>${item.date}</td>
-                <td>${item.timeStart}</td>
-                <td>${item.timeClose}</td>
-                <td class="dur-col">${item.duration}</td>
-                <td class="amt-col">${item.amount}</td>
-                <td class="no-print">
-                    <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
-                    <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
-                </td>`;
-        });
-        updateStats();
     }
 
     async function updateStatusCloud(id, current) {
-        const next = current === "DONE" ? "PENDING" : "DONE";
-        document.getElementById('statusMsg').style.display = "block";
-        await fetch(GOOGLE_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify({action: "status_update", rowId: id, status: next}) 
-        });
-        fetchHistory(); // Sync back
-    }
-
-    function updateStats() {
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        let totalAmt = 0, totalMins = 0;
-
-        for (let i = 1; i < tr.length; i++) {
-            if (tr[i].style.display !== "none") {
-                totalAmt += parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
-                
-                let durText = tr[i].getElementsByClassName("dur-col")[0].innerText;
-                let match = durText.match(/(\d+)h\s+(\d+)m/);
-                if(match) totalMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
-            }
-        }
-        document.getElementById('grandTotal').innerText = totalAmt.toFixed(2);
-        document.getElementById('grandTotalTime').innerText = Math.floor(totalMins/60) + "h " + (totalMins%60) + "m";
-    }
-
-    function filterTable() {
-        let filter = document.getElementById("filterInput").value.toUpperCase();
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        for (let i = 1; i < tr.length; i++) {
-            tr[i].style.display = tr[i].innerText.toUpperCase().includes(filter) ? "" : "none";
-        }
-        updateStats();
-    }
-
-    async function saveData() {
-        const mainBtn = document.getElementById('mainBtn');
-        const rowId = document.getElementById('rowId').value;
-        
-        const entry = {
-            action: rowId ? "edit" : "add",
-            rowId: rowId,
-            name: document.getElementById('name').value,
-            mobile: document.getElementById('mobile').value,
-            village: document.getElementById('village').value,
-            date: document.getElementById('date').value,
-            timeStart: document.getElementById('timeStart').value,
-            timeClose: document.getElementById('timeClose').value,
-            amount: document.getElementById('amount').value,
-            duration: (function(s,e){
-                if(!s||!e) return "0h 0m";
-                let diff = new Date("2000/01/01 "+e) - new Date("2000/01/01 "+s);
-                if(diff<0) diff+=86400000;
-                return Math.floor(diff/3600000)+"h "+Math.floor((diff%3600000)/60000)+"m";
-            })(document.getElementById('timeStart').value, document.getElementById('timeClose').value)
-        };
-
-        if(!entry.name || !entry.date) return alert("Fill Name & Date!");
-        
-        mainBtn.innerText = "Syncing...";
-        mainBtn.disabled = true;
-        await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
-        location.reload();
-    }
-
-    function editEntry(idx) {
-        const item = allData[idx];
-        document.getElementById('rowId').value = item.rowId;
-        document.getElementById('name').value = item.name;
-        document.getElementById('mobile').value = item.mobile;
-        document.getElementById('village').value = item.village;
-        document.getElementById('date').value = item.date;
-        document.getElementById('timeStart').value = item.timeStart;
-        document.getElementById('timeClose').value = item.timeClose;
-        document.getElementById('amount').value = item.amount;
-        document.getElementById('mainBtn').innerText = "Update Now";
-        document.getElementById('mainBtn').style.background = "var(--primary)";
-        window.scrollTo(0,0);
+        await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "status_update", rowId: id, status: (current==="DONE"?"PENDING":"DONE")}) });
+        fetchHistory();
     }
 
     async function deleteEntry(id) {
-        if(confirm("Delete Permanently from Cloud?")) {
+        if(confirm("Delete?")) {
             await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", rowId: id}) });
             location.reload();
         }
+    }
+
+    function filterTable() {
+        let f = document.getElementById("filterInput").value.toUpperCase();
+        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
+        for (let i = 1; i < tr.length; i++) tr[i].style.display = tr[i].innerText.toUpperCase().includes(f) ? "" : "none";
     }
 </script>
 </body>
