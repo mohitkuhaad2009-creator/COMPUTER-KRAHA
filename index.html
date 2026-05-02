@@ -3,36 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Perfect Date & Time Tracker</title>
+    <title>Computer Kraha - Perfect Sync Tracker</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 15px; background: #eef2f7; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 10px; background: #eef2f7; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
-        .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 20px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
-        label { font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+        .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 15px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
+        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
         input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
-        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
-        .btn-save { background: var(--success); width: 100%; margin-top: 22px; }
-        .btn-edit { background: var(--warning); color: #000; padding: 5px 10px; margin-right: 5px; }
-        .btn-del { background: var(--danger); padding: 5px 10px; }
+        .btn { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-save { background: var(--success); width: 100%; margin-top: 18px; }
+        .btn-edit { background: var(--warning); color: #000; padding: 5px 8px; font-size: 12px; margin-right: 2px; }
+        .btn-del { background: var(--danger); padding: 5px 8px; font-size: 12px; }
         .btn-ok { font-size: 11px; padding: 5px 10px; min-width: 60px; }
+        
         .row-done { background-color: #d4edda !important; }
+        
+        .search-box { margin-bottom: 15px; }
+        .search-box input { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; }
 
-        .search-box { margin: 20px 0; padding: 15px; background: #fff; border: 1px solid var(--primary); border-radius: 8px; }
-        .search-box input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: var(--primary); color: white; position: sticky; top: 0; }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
         tr:nth-child(even) { background: #f9f9f9; }
 
-        .history-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dark); padding: 10px 0; }
-        .stats-badge { background: var(--dark); color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
-        
-        .summary-bar { margin-top: 20px; padding: 20px; background: var(--dark); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
+        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; flex-wrap: wrap; gap: 10px; }
         .total-val { color: #50fa7b; font-weight: bold; }
+        
+        #statusMsg { text-align: center; color: var(--primary); font-weight: bold; padding: 5px; display: none; }
         
         @media print { .input-group, .search-box, .no-print, .btn-edit, .btn-del, .btn-ok { display: none !important; } }
     </style>
@@ -40,8 +40,6 @@
 <body>
 
 <div class="container">
-    <h2>Entry Panel</h2>
-    
     <div class="input-group">
         <input type="hidden" id="rowId">
         <div><label>Name</label><input type="text" id="name"></div>
@@ -50,25 +48,20 @@
         <div><label>Date</label><input type="date" id="date"></div>
         <div><label>Start</label><input type="time" id="timeStart"></div>
         <div><label>Close</label><input type="time" id="timeClose"></div>
-        <div><label>Amount</label><input type="number" id="amount"></div>
+        <div><label>Amount (₹)</label><input type="number" id="amount"></div>
         <button onclick="saveData()" id="mainBtn" class="btn btn-save">Save & Sync</button>
     </div>
 
-    <div class="history-header">
-        <h3>Live Cloud History</h3>
-        <div class="stats-badge">Shown: <span id="entryCount">0</span></div>
-    </div>
-
     <div class="search-box">
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search Name, Village or Mobile...">
+        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History (Name, Village, Mobile)...">
     </div>
 
-    <div id="statusMsg" style="text-align: center; color: var(--primary); font-weight: bold; padding: 10px; display:none;">Syncing...</div>
+    <div id="statusMsg">Syncing with Cloud...</div>
 
     <table id="dataTable">
         <thead>
             <tr>
-                <th>Status</th>
+                <th class="no-print">OK</th>
                 <th>Name</th>
                 <th>Mobile</th>
                 <th>Village</th>
@@ -85,12 +78,13 @@
 
     <div class="summary-bar">
         <div>Total Time: <span class="total-val" id="grandTotalTime">0h 0m</span></div>
-        <div>Total Amount: <span class="total-val">₹<span id="grandTotal">0.00</span></span></div>
+        <div>Grand Total: <span class="total-val">₹<span id="grandTotal">0.00</span></span></div>
     </div>
 </div>
 
 <script>
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbzaZCeBmrdLivUsffEV0CK5Qo4QIgFV94cHR3s-_iQHvej4M_TdByyrSbQxOoGOkMiL/exec";
+    // UPDATED URL
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwWq4O_u7I-6vHZJLbpsFP3-cPI-4K2Tt2Qx_afDqACLE3SXL7UpCufKSYEA4yiUmZC/exec";
     let allData = [];
 
     window.onload = fetchHistory;
@@ -103,21 +97,18 @@
             allData = await res.json();
             renderTable();
             status.style.display = "none";
-        } catch (err) { status.innerText = "Connection Error!"; }
+        } catch (err) { status.innerText = "Connection Error! Refresh again."; }
     }
 
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
         
+        // Reverse so new entries stay on top
         allData.slice().reverse().forEach((item, index) => {
             const isDone = item.status === "DONE";
             const row = tbody.insertRow();
             if(isDone) row.classList.add('row-done');
-
-            // Correct Date Handling (Fixing the 1-day back issue)
-            let rawDate = new Date(item.date);
-            let formattedDate = item.date.includes('T') ? item.date.split('T')[0] : item.date;
 
             row.innerHTML = `
                 <td class="no-print">
@@ -127,35 +118,20 @@
                         ${isDone ? 'DONE' : 'OK'}
                     </button>
                 </td>
-                <td>${item.name}</td><td>${item.mobile}</td><td>${item.village}</td>
-                <td>${formattedDate}</td><td>${item.timeStart}</td><td>${item.timeClose}</td>
-                <td class="dur-col">${item.duration}</td><td class="amt-col">${parseFloat(item.amount).toFixed(2)}</td>
+                <td>${item.name}</td>
+                <td>${item.mobile}</td>
+                <td>${item.village}</td>
+                <td>${item.date}</td>
+                <td>${item.timeStart}</td>
+                <td>${item.timeClose}</td>
+                <td class="dur-col">${item.duration}</td>
+                <td class="amt-col">${item.amount}</td>
                 <td class="no-print">
                     <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
                     <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
                 </td>`;
         });
         updateStats();
-    }
-
-    function updateStats() {
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        let totalAmt = 0, totalMins = 0, count = 0;
-
-        for (let i = 1; i < tr.length; i++) {
-            if (tr[i].style.display !== "none") {
-                totalAmt += parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
-                
-                let durText = tr[i].getElementsByClassName("dur-col")[0].innerText;
-                let match = durText.match(/(\d+)h\s+(\d+)m/);
-                if(match) totalMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
-                
-                count++;
-            }
-        }
-        document.getElementById('grandTotal').innerText = totalAmt.toFixed(2);
-        document.getElementById('grandTotalTime').innerText = Math.floor(totalMins/60) + "h " + (totalMins%60) + "m";
-        document.getElementById('entryCount').innerText = count;
     }
 
     async function updateStatusCloud(id, current) {
@@ -166,7 +142,24 @@
             mode: 'no-cors', 
             body: JSON.stringify({action: "status_update", rowId: id, status: next}) 
         });
-        fetchHistory();
+        fetchHistory(); // Sync back
+    }
+
+    function updateStats() {
+        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
+        let totalAmt = 0, totalMins = 0;
+
+        for (let i = 1; i < tr.length; i++) {
+            if (tr[i].style.display !== "none") {
+                totalAmt += parseFloat(tr[i].getElementsByClassName("amt-col")[0].innerText) || 0;
+                
+                let durText = tr[i].getElementsByClassName("dur-col")[0].innerText;
+                let match = durText.match(/(\d+)h\s+(\d+)m/);
+                if(match) totalMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
+            }
+        }
+        document.getElementById('grandTotal').innerText = totalAmt.toFixed(2);
+        document.getElementById('grandTotalTime').innerText = Math.floor(totalMins/60) + "h " + (totalMins%60) + "m";
     }
 
     function filterTable() {
@@ -179,14 +172,16 @@
     }
 
     async function saveData() {
+        const mainBtn = document.getElementById('mainBtn');
         const rowId = document.getElementById('rowId').value;
+        
         const entry = {
             action: rowId ? "edit" : "add",
             rowId: rowId,
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             village: document.getElementById('village').value,
-            date: document.getElementById('date').value, // Direct string save
+            date: document.getElementById('date').value,
             timeStart: document.getElementById('timeStart').value,
             timeClose: document.getElementById('timeClose').value,
             amount: document.getElementById('amount').value,
@@ -197,8 +192,11 @@
                 return Math.floor(diff/3600000)+"h "+Math.floor((diff%3600000)/60000)+"m";
             })(document.getElementById('timeStart').value, document.getElementById('timeClose').value)
         };
-        if(!entry.name) return alert("Name is required!");
-        document.getElementById('mainBtn').innerText = "Syncing...";
+
+        if(!entry.name || !entry.date) return alert("Fill Name & Date!");
+        
+        mainBtn.innerText = "Syncing...";
+        mainBtn.disabled = true;
         await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
         location.reload();
     }
@@ -209,16 +207,17 @@
         document.getElementById('name').value = item.name;
         document.getElementById('mobile').value = item.mobile;
         document.getElementById('village').value = item.village;
-        document.getElementById('date').value = item.date.includes('T') ? item.date.split('T')[0] : item.date;
+        document.getElementById('date').value = item.date;
         document.getElementById('timeStart').value = item.timeStart;
         document.getElementById('timeClose').value = item.timeClose;
         document.getElementById('amount').value = item.amount;
         document.getElementById('mainBtn').innerText = "Update Now";
+        document.getElementById('mainBtn').style.background = "var(--primary)";
         window.scrollTo(0,0);
     }
 
     async function deleteEntry(id) {
-        if(confirm("Delete from Cloud?")) {
+        if(confirm("Delete Permanently from Cloud?")) {
             await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", rowId: id}) });
             location.reload();
         }
