@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Full Detail Tracker</title>
+    <title>Computer Kraha - Ultimate Tracker</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 10px; background: #eef2f7; }
@@ -22,8 +22,11 @@
         .row-done { background-color: #d4edda !important; }
         .expense-row { background-color: #fff5f5 !important; border-left: 5px solid var(--danger); }
         
-        .search-box { margin-bottom: 15px; }
-        .search-box input { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; }
+        .filter-section { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .search-box { flex: 2; min-width: 200px; }
+        .search-box input { width: 100%; padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        .type-filter { flex: 1; min-width: 150px; }
+        .type-filter select { padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; cursor: pointer; }
 
         table { width: 100%; border-collapse: collapse; background: white; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
@@ -35,7 +38,7 @@
         .val-out { color: #ff6b6b; }
         
         #statusMsg { text-align: center; color: var(--primary); font-weight: bold; padding: 5px; display: none; }
-        @media print { .input-group, .search-box, .no-print { display: none !important; } }
+        @media print { .input-group, .filter-section, .no-print { display: none !important; } }
     </style>
 </head>
 <body>
@@ -50,7 +53,7 @@
                 <option value="EXPENSE">EXPENSE (Kharcha)</option>
             </select>
         </div>
-        <div><label>Name/Detail</label><input type="text" id="name"></div>
+        <div><label>Name/Detail</label><input type="text" id="name" placeholder="Customer or Reason"></div>
         <div id="mobileDiv"><label>Mobile</label><input type="text" id="mobile"></div>
         <div id="villageDiv"><label>Village</label><input type="text" id="village"></div>
         <div><label>Date</label><input type="date" id="date"></div>
@@ -60,8 +63,17 @@
         <button onclick="saveData()" id="mainBtn" class="btn btn-save">Save & Sync</button>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History...">
+    <div class="filter-section">
+        <div class="search-box">
+            <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search Name, Village, Mobile...">
+        </div>
+        <div class="type-filter">
+            <select id="typeFilter" onchange="filterTable()">
+                <option value="ALL">Show ALL Entries</option>
+                <option value="INCOME">INCOME ONLY</option>
+                <option value="EXPENSE">EXPENSE ONLY</option>
+            </select>
+        </div>
     </div>
 
     <div id="statusMsg">Syncing with Cloud...</div>
@@ -86,9 +98,9 @@
     </table>
 
     <div class="summary-bar">
-        <div>Income: <span class="total-val val-in">₹<span id="grandTotalIn">0.00</span></span></div>
-        <div>Expense: <span class="total-val val-out">₹<span id="grandTotalOut">0.00</span></span></div>
-        <div>Net: <span class="total-val">₹<span id="netProfit">0.00</span></span></div>
+        <div>Total Income: <span class="total-val val-in">₹<span id="grandTotalIn">0.00</span></span></div>
+        <div>Total Expense: <span class="total-val val-out">₹<span id="grandTotalOut">0.00</span></span></div>
+        <div>Net Profit: <span class="total-val">₹<span id="netProfit">0.00</span></span></div>
     </div>
 </div>
 
@@ -112,23 +124,18 @@
             allData = await res.json();
             renderTable();
             document.getElementById('statusMsg').style.display = "none";
-        } catch (err) { alert("Error connecting to Google Sheet!"); }
+        } catch (err) { alert("Sheet Connection Error!"); }
     }
 
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
-        let tIn = 0, tOut = 0;
-
         allData.slice().reverse().forEach((item, index) => {
             const isDone = item.status === "DONE";
             const isExp = item.category === "EXPENSE";
             const row = tbody.insertRow();
             if(isDone) row.classList.add('row-done');
             if(isExp) row.classList.add('expense-row');
-
-            let amt = parseFloat(item.amount) || 0;
-            if(isExp) tOut += amt; else tIn += amt;
 
             row.innerHTML = `
                 <td class="no-print">
@@ -142,12 +149,35 @@
                 <td>${item.timeStart || '-'}</td>
                 <td>${item.timeClose || '-'}</td>
                 <td>${item.duration || '-'}</td>
-                <td style="color:${isExp?'red':'green'}; font-weight:bold">${amt.toFixed(2)}</td>
+                <td style="color:${isExp?'red':'green'}; font-weight:bold">${parseFloat(item.amount).toFixed(2)}</td>
                 <td class="no-print">
                     <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
                     <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
                 </td>`;
         });
+        filterTable(); // Refresh totals on load
+    }
+
+    function filterTable() {
+        let searchText = document.getElementById("filterInput").value.toUpperCase();
+        let selectedCat = document.getElementById("typeFilter").value.toUpperCase();
+        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
+        let tIn = 0, tOut = 0;
+
+        for (let i = 1; i < tr.length; i++) {
+            let rowText = tr[i].innerText.toUpperCase();
+            let rowCategory = tr[i].cells[1].innerText.toUpperCase();
+            let matchesSearch = rowText.includes(searchText);
+            let matchesCat = (selectedCat === "ALL" || rowCategory.includes(selectedCat));
+
+            if (matchesSearch && matchesCat) {
+                tr[i].style.display = "";
+                let amt = parseFloat(tr[i].cells[9].innerText) || 0;
+                if (rowCategory.includes("EXPENSE")) tOut += amt; else tIn += amt;
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
         document.getElementById('grandTotalIn').innerText = tIn.toFixed(2);
         document.getElementById('grandTotalOut').innerText = tOut.toFixed(2);
         document.getElementById('netProfit').innerText = (tIn - tOut).toFixed(2);
@@ -178,7 +208,7 @@
             })(sTime, cTime)
         };
 
-        if(!entry.name || !entry.amount) return alert("Fill Name and Amount!");
+        if(!entry.name || !entry.amount) return alert("Please fill Name and Amount!");
         document.getElementById('mainBtn').innerText = "Syncing...";
         await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
         location.reload();
@@ -206,16 +236,10 @@
     }
 
     async function deleteEntry(id) {
-        if(confirm("Delete?")) {
+        if(confirm("Delete Permanently?")) {
             await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", rowId: id}) });
             location.reload();
         }
-    }
-
-    function filterTable() {
-        let f = document.getElementById("filterInput").value.toUpperCase();
-        let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        for (let i = 1; i < tr.length; i++) tr[i].style.display = tr[i].innerText.toUpperCase().includes(f) ? "" : "none";
     }
 </script>
 </body>
