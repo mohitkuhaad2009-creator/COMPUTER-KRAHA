@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Kraha - Ultimate Tracker</title>
+    <title>Computer Kraha - Ultimate Machine Tracker</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #343a40; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 10px; background: #eef2f7; }
@@ -26,16 +26,19 @@
         .search-box { flex: 2; min-width: 200px; }
         .search-box input { width: 100%; padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; box-sizing: border-box; }
         .type-filter { flex: 1; min-width: 150px; }
-        .type-filter select { padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .type-filter select { padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; height: 100%; cursor: pointer; }
 
         table { width: 100%; border-collapse: collapse; background: white; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
 
-        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; flex-wrap: wrap; gap: 10px; }
-        .total-val { font-weight: bold; }
+        .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; text-align: center; }
+        .stat-item { border-right: 1px solid #555; }
+        .stat-item:last-child { border-right: none; }
+        .total-val { font-size: 1.2rem; font-weight: bold; display: block; }
         .val-in { color: #50fa7b; }
         .val-out { color: #ff6b6b; }
+        .val-time { color: #8be9fd; }
         
         #statusMsg { text-align: center; color: var(--primary); font-weight: bold; padding: 5px; display: none; }
         @media print { .input-group, .filter-section, .no-print { display: none !important; } }
@@ -65,7 +68,7 @@
 
     <div class="filter-section">
         <div class="search-box">
-            <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search Name, Village, Mobile...">
+            <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History...">
         </div>
         <div class="type-filter">
             <select id="typeFilter" onchange="filterTable()">
@@ -98,9 +101,10 @@
     </table>
 
     <div class="summary-bar">
-        <div>Total Income: <span class="total-val val-in">₹<span id="grandTotalIn">0.00</span></span></div>
-        <div>Total Expense: <span class="total-val val-out">₹<span id="grandTotalOut">0.00</span></span></div>
-        <div>Net Profit: <span class="total-val">₹<span id="netProfit">0.00</span></span></div>
+        <div class="stat-item">Income <span class="total-val val-in" id="grandTotalIn">₹0.00</span></div>
+        <div class="stat-item">Expense <span class="total-val val-out" id="grandTotalOut">₹0.00</span></div>
+        <div class="stat-item">Net Profit <span class="total-val" id="netProfit">₹0.00</span></div>
+        <div class="stat-item">Total Time <span class="total-val val-time" id="grandTotalTime">0h 0m</span></div>
     </div>
 </div>
 
@@ -124,7 +128,7 @@
             allData = await res.json();
             renderTable();
             document.getElementById('statusMsg').style.display = "none";
-        } catch (err) { alert("Sheet Connection Error!"); }
+        } catch (err) { alert("Sheet se connect nahi ho paya!"); }
     }
 
     function renderTable() {
@@ -148,21 +152,22 @@
                 <td>${item.date}</td>
                 <td>${item.timeStart || '-'}</td>
                 <td>${item.timeClose || '-'}</td>
-                <td>${item.duration || '-'}</td>
-                <td style="color:${isExp?'red':'green'}; font-weight:bold">${parseFloat(item.amount).toFixed(2)}</td>
+                <td class="dur-cell">${item.duration || '-'}</td>
+                <td class="amt-cell" style="color:${isExp?'red':'green'}; font-weight:bold">${parseFloat(item.amount).toFixed(2)}</td>
                 <td class="no-print">
                     <button class="btn btn-edit" onclick="editEntry(${allData.length - 1 - index})">Edit</button>
                     <button class="btn btn-del" onclick="deleteEntry(${item.rowId})">Del</button>
                 </td>`;
         });
-        filterTable(); // Refresh totals on load
+        filterTable();
     }
 
     function filterTable() {
         let searchText = document.getElementById("filterInput").value.toUpperCase();
         let selectedCat = document.getElementById("typeFilter").value.toUpperCase();
         let tr = document.getElementById("dataTable").getElementsByTagName("tr");
-        let tIn = 0, tOut = 0;
+        
+        let tIn = 0, tOut = 0, tMins = 0;
 
         for (let i = 1; i < tr.length; i++) {
             let rowText = tr[i].innerText.toUpperCase();
@@ -172,15 +177,22 @@
 
             if (matchesSearch && matchesCat) {
                 tr[i].style.display = "";
-                let amt = parseFloat(tr[i].cells[9].innerText) || 0;
+                // Amt calculation
+                let amt = parseFloat(tr[i].querySelector('.amt-cell').innerText) || 0;
                 if (rowCategory.includes("EXPENSE")) tOut += amt; else tIn += amt;
+                
+                // Time calculation
+                let durText = tr[i].querySelector('.dur-cell').innerText;
+                let match = durText.match(/(\d+)h\s+(\d+)m/);
+                if(match) tMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
             } else {
                 tr[i].style.display = "none";
             }
         }
-        document.getElementById('grandTotalIn').innerText = tIn.toFixed(2);
-        document.getElementById('grandTotalOut').innerText = tOut.toFixed(2);
-        document.getElementById('netProfit').innerText = (tIn - tOut).toFixed(2);
+        document.getElementById('grandTotalIn').innerText = "₹" + tIn.toFixed(2);
+        document.getElementById('grandTotalOut').innerText = "₹" + tOut.toFixed(2);
+        document.getElementById('netProfit').innerText = "₹" + (tIn - tOut).toFixed(2);
+        document.getElementById('grandTotalTime').innerText = Math.floor(tMins/60) + "h " + (tMins%60) + "m";
     }
 
     async function saveData() {
@@ -208,7 +220,7 @@
             })(sTime, cTime)
         };
 
-        if(!entry.name || !entry.amount) return alert("Please fill Name and Amount!");
+        if(!entry.name || !entry.amount) return alert("Pura form bharein!");
         document.getElementById('mainBtn').innerText = "Syncing...";
         await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) });
         location.reload();
@@ -236,7 +248,7 @@
     }
 
     async function deleteEntry(id) {
-        if(confirm("Delete Permanently?")) {
+        if(confirm("Delete karna chahte hain?")) {
             await fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "delete", rowId: id}) });
             location.reload();
         }
