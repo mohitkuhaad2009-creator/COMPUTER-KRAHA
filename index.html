@@ -9,12 +9,14 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 10px; background: #eef2f7; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
+        /* Input & Filter Styles */
         .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 15px; background: var(--light); border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
         label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
         .btn { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
         .btn-save { background: var(--success); width: 100%; margin-top: 18px; }
+        .btn-print { background: var(--dark); margin-left: 10px; padding: 10px 20px; }
         .btn-edit { background: var(--warning); color: #000; padding: 5px 8px; font-size: 12px; }
         .btn-del { background: var(--danger); padding: 5px 8px; font-size: 12px; }
         .btn-ok { font-size: 11px; padding: 5px 10px; min-width: 60px; }
@@ -22,16 +24,17 @@
         .row-done { background-color: #d4edda !important; }
         .expense-row { background-color: #fff5f5 !important; border-left: 5px solid var(--danger); }
         
-        .filter-section { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-section { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: flex-end; }
         .search-box { flex: 2; min-width: 200px; }
         .search-box input { width: 100%; padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-size: 16px; box-sizing: border-box; }
         .type-filter { flex: 1; min-width: 150px; }
-        .type-filter select { padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; height: 100%; cursor: pointer; }
 
+        /* Table Styles */
         table { width: 100%; border-collapse: collapse; background: white; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
 
+        /* Summary Bar */
         .summary-bar { margin-top: 20px; padding: 15px; background: var(--dark); color: white; border-radius: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; text-align: center; }
         .stat-item { border-right: 1px solid #555; }
         .stat-item:last-child { border-right: none; }
@@ -41,7 +44,18 @@
         .val-time { color: #8be9fd; }
         
         #statusMsg { text-align: center; color: var(--primary); font-weight: bold; padding: 5px; display: none; }
-        @media print { .input-group, .filter-section, .no-print { display: none !important; } }
+
+        /* PRINT SETTINGS - Ye zaroori hai */
+        @media print {
+            body { background: white; margin: 0; }
+            .input-group, .filter-section, .no-print, #statusMsg, .btn-edit, .btn-del { display: none !important; }
+            .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+            table { font-size: 10px; width: 100%; }
+            th { background: #eee !important; color: black !important; }
+            .summary-bar { background: #eee !important; color: black !important; border: 1px solid #ccc; }
+            .stat-item { border-right: 1px solid #ccc; }
+            .total-val { color: black !important; }
+        }
     </style>
 </head>
 <body>
@@ -71,12 +85,13 @@
             <input type="text" id="filterInput" onkeyup="filterTable()" placeholder="🔍 Search History...">
         </div>
         <div class="type-filter">
-            <select id="typeFilter" onchange="filterTable()">
+            <select id="typeFilter" onchange="filterTable()" style="padding: 10px; border: 2px solid var(--primary); border-radius: 6px; font-weight: bold;">
                 <option value="ALL">Show ALL Entries</option>
                 <option value="INCOME">INCOME ONLY</option>
                 <option value="EXPENSE">EXPENSE ONLY</option>
             </select>
         </div>
+        <button onclick="window.print()" class="btn btn-print no-print">🖨️ Print Report</button>
     </div>
 
     <div id="statusMsg">Syncing with Cloud...</div>
@@ -177,11 +192,8 @@
 
             if (matchesSearch && matchesCat) {
                 tr[i].style.display = "";
-                // Amt calculation
                 let amt = parseFloat(tr[i].querySelector('.amt-cell').innerText) || 0;
                 if (rowCategory.includes("EXPENSE")) tOut += amt; else tIn += amt;
-                
-                // Time calculation
                 let durText = tr[i].querySelector('.dur-cell').innerText;
                 let match = durText.match(/(\d+)h\s+(\d+)m/);
                 if(match) tMins += (parseInt(match[1]) * 60) + parseInt(match[2]);
